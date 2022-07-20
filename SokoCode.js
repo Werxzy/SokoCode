@@ -9,21 +9,13 @@ let cursorBlink;
 
 let robotX, robotY, robotDir, robotState, robotTrapped;
 
-let level = [
-	[1,0,0,0,1,6,5,3,4],
-	[0,1,0,0,0,3,2,1,4],
-	[0,1,0,0,0,0,0,0,2],
-	[0,0,0,0,0,1,7,0,7],
-	[0,1,1,1,0,0,0,0,0]
-];
-let filledHoles = [] // just for looks, shouldn't cause any puzzle interaction
-
-let goals = [[3,2], [5,2]]
+let level = [];
+let filledHoles = []; // just for looks, shouldn't cause any puzzle interaction
+let goals = [];
 // max level size is 9 by 5 
 
-const ALL_LEVELS = [
-	{
-		name : 'Test Level',
+const ALL_LEVELS = {
+	'Test Level' : {
 		description : ' This is a test level',
 		versions : [	 // there can be multiple versions of the level that the player would need to account for
 			{
@@ -61,8 +53,7 @@ const ALL_LEVELS = [
 			'/...YET'
 		]
 	},
-	{
-		name : 'Second Test',
+	'Second Test' : {
 		description : ' Just a second level to look at',
 		versions : [	 
 			{
@@ -82,7 +73,7 @@ const ALL_LEVELS = [
 			'/TEST LEVEL'
 		]
 	}
-];
+};
 
 /*
 	puzzle ideas
@@ -150,8 +141,8 @@ let levelCursor;
 
 let extraMenuCursor;
 let extraMenuPage;
-const extraMenuOptions = ['View Manuel', 'Return to Level Select']
-let gameManuel = [
+const extraMenuOptions = ['View Manual', 'Return to Level Select']
+let gameManual = [
 // done like this since I want it formatted in a very specific way
 //                                             | \(text limit, inclusive)
 '  The Goal of each level is to place a box on    \
@@ -214,23 +205,6 @@ JMT [label] - Jumps to label if state is TRUE.   \
 JMF [label] - Jumps to label if state is FALSE.  '
 ];
 
-// for(let i = 0; i < gameManuel.length; i++){
-// 	let c = gameManuel[i].split('\n');
-// 	for(let j = 0; j < c.length; j++){
-// 		c[j] = c[j].trim()
-// 		if(c[j].length > 48){
-// 			c.splice(j,0,c[j].slice(0, 48));
-// 			c[j+1] = c[j+1].slice(48)
-// 		}
-// 		c[j] = c[j].trim()
-// 		while(c[j].length < 48){
-// 			c[j] += ' '
-// 		}
-// 	}
-// 	gameManuel[i] = c.join()
-// }
-
-
 let userSave;
 /*
 	loaded state
@@ -238,10 +212,10 @@ let userSave;
 	[
 		{
 			bestTime: 25, 
-			bestcharCount: 50,
+			bestCharCount: 50,
 			solutions: [
 				{
-					time: 0, (not solved)
+					time: 999, (not solved)
 					charCount: 50
 					code: [
 						'START:',
@@ -296,60 +270,30 @@ function getName()
 }
 
 function createEmptyData(){
-	s = '';
-	for(let i = 0; i < ALL_LEVELS.length; i++){
-		if(i > 0) s += '|';
-		s += "0~0";
+	userSave = {}
+	
+	keys = Object.keys(ALL_LEVELS)
+	for(let i = 0; i < keys.length; i++){
+		userSave[keys[i]] = {
+			bestTime : 999,
+			bestCharCount : 999,
+			solutions : []
+		}
 	}
-	saveData(s);
-	return s;
+
+	saveUserData();
 }
 
 function loadUserData(){
-	userSave = [];
-
 	d = loadData()
 	if(d.length == 0)
-		d = createEmptyData()
-
-	let levData = d.split('|');
-
-	for(let i = 0; i < levData.length; i++){
-		let solData = levData[i].split('~');
-
-		let entry = {
-			bestTime : parseInt(solData[0]),
-			bestCharCount : parseInt(solData[1]),
-			solutions : []
-		};
-
-		for(let j = 2; j < solData.length; j++){
-			let indvData = solData[j].split('_')
-			entry.solutions.push({
-				time : parseInt(indvData[0]),
-				charCount : parseInt(indvData[1]),
-				code : indvData.slice(2)
-			});
-		}
-
-		userSave.push(entry)
-	}
+		createEmptyData()
+	else
+		userSave = JSON.parse(d)	
 }
 
 function saveUserData(){
-	s = ''
-	for(let i = 0; i < userSave.length; i++){
-		if(i > 0) s += '|';
-		data = userSave[i]
-		s += data.bestTime + '~' + data.bestCharCount;
-		for(let j = 0; j < data.solutions.length; j++){
-			sol = data.solutions[j];
-			s += '~' + sol.time 
-			s += '_' + sol.charCount 
-			s += '_' + sol.code.join('_');
-		}
-	}
-	saveData(s)
+	saveData(JSON.stringify(userSave))
 }
 
 function onConnect()
@@ -540,8 +484,9 @@ function drawTitleScreen(){
 
 function drawLevelSelection(){
 	drawMainBoxes()
-	for(let i = 0; i < ALL_LEVELS.length; i++){
-		drawText(ALL_LEVELS[i].name, levelCursor == i ? 17 : 8, 1,i+1)
+	names = Object.keys(ALL_LEVELS);
+	for(let i = 0; i < names.length; i++){
+		drawText(names[i], levelCursor == i ? 17 : 8, 1,i+1)
 	}
 	drawText('>', 17, 0, levelCursor + 1)
 }
@@ -577,16 +522,16 @@ function drawLevelScreen(){
 		if(isRunning){
 			drawText('(1) Run  (2) Step  (3) Stop  ', 10, 17, 19);
 
-			statusText = 'Time:    State:' + (robotTrapped ? 'Stuck' : robotState ? ' TRUE' : 'FALSE');
+			statusText = 'Time:     State:' + (robotTrapped ? 'Stuck' : robotState ? ' TRUE' : 'FALSE');
 			
 			f = ['RIGHT','   UP',' LEFT',' DOWN'][robotDir];
-			statusText += ' Facing:' + f;
+			statusText += '  Facing:' + f;
 			
-			drawText(statusText, 10, 17, 0);
+			drawText(statusText, 10, 18, 0);
 
-			drawText('000', 3, 22, 0);
+			drawText('000', 3, 23, 0);
 			t = levelTime.toString();
-			drawText(t, 10, 25 - t.length, 0);
+			drawText(t, 10, 26 - t.length, 0);
 		}
 		else
 			drawText('(1) Run  (2) Step           (ESC) Menu', 10, 17, 19)
@@ -604,8 +549,10 @@ function drawLevelExtraMenu(){
 		drawText('>', 17, 3, 4 + extraMenuCursor * 2)
 	}
 	else if(extraMenuPage == 1){
-		drawTextWrapped(gameManuel[extraMenuCursor], 10, 4, 4, 48)
+		drawTextWrapped(gameManual[extraMenuCursor], 10, 4, 4, 48)
 		drawText('(Arrow Keys) Turn Page', 10, 17,19)
+		p = ' ' + (extraMenuCursor + 1) + '/' + (gameManual.length) + ' '
+		drawText(p, 10, 52-p.length, 17)
 	}
 	
 	drawText('(ESC) Back', 10, 45, 19)
@@ -703,12 +650,12 @@ function testRobotMove(key){
 	}
 }
 
-function loadLevel(number, version, solutionNumber){
+function loadLevel(levelName, version, solutionNumber){
 	level = []
 	goals = []
 	filledHoles = []
 
-	let loading = ALL_LEVELS[number].versions[version]
+	let loading = ALL_LEVELS[levelName].versions[version]
 
 	for(let i = 0; i < loading.grid.length; i++)
 		level[i] = loading.grid[i].slice()
@@ -723,19 +670,19 @@ function loadLevel(number, version, solutionNumber){
 	robotTrapped = false
 
 	if(solutionNumber == -1){
-		solutionNumber = userSave[number].solutions.length
+		solutionNumber = userSave[levelName].solutions.length
 		codeText = []
-		for(let i = 0; i < ALL_LEVELS[number].startCode.length; i++)
-			codeText[i] = ALL_LEVELS[number].startCode[i].slice()
+		for(let i = 0; i < ALL_LEVELS[levelName].startCode.length; i++)
+			codeText[i] = ALL_LEVELS[levelName].startCode[i].slice()
 		
-		userSave[number].solutions.push({
-			time : 0,
-			charCount : 0,
+		userSave[levelName].solutions.push({
+			time : 999,
+			charCount : 999,
 			code : codeText
 		})
 	}
 	else if(solutionNumber >= 0){
-		codeText = userSave[number].solutions[solutionNumber].code
+		codeText = userSave[levelName].solutions[solutionNumber].code
 	}
 
 
@@ -1100,14 +1047,15 @@ function levelSelectInput(key){
 			levelCursor = Math.max(0, levelCursor - 1);
 			break;
 		case 18: // down arrow
-			levelCursor = Math.min(ALL_LEVELS.length - 1, levelCursor + 1);
+			levelCursor = Math.min(Object.keys(ALL_LEVELS).length - 1, levelCursor + 1);
 			break;
 		case 10: // enter key
-			currentLevel = levelCursor;
+			currentLevel = Object.keys(ALL_LEVELS)[levelCursor];
 			currentVersion = 0;
-			currentSolution = userSave[currentLevel].solutions.length - 1; // TODO
+			currentSolution = userSave[currentLevel].solutions.length - 1;
 			loadLevel(currentLevel, 0, currentSolution);
 			currentScene = 2;
+			cursorX = cursorY = 0
 			break;
 	}
 }
@@ -1142,7 +1090,7 @@ function extraMenuInput(key){
 				extraMenuCursor = Math.max(0, extraMenuCursor - 1);
 				break;
 			case 20: // right arrow
-				extraMenuCursor = Math.min(gameManuel.length - 1, extraMenuCursor + 1);
+				extraMenuCursor = Math.min(gameManual.length - 1, extraMenuCursor + 1);
 				break;
 			case 27: // escape
 				extraMenuPage = 0;
