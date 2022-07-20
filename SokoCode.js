@@ -23,19 +23,25 @@ let goals = [[3,2], [5,2]]
 
 const ALL_LEVELS = [
 	{
-		grid : [ // the grid of boxes or walls
-			[1,0,0,0,1,6,5,3,4],
-			[0,1,0,0,0,3,2,1,4],
-			[0,1,0,0,0,0,0,0,2],
-			[0,0,0,0,0,0,0,0,7],
-			[0,1,1,1,0,0,0,0,0]
+		name : 'Test Level',
+		description : ' This is a test level',
+		versions : [	 // there can be multiple versions of the level that the player would need to account for
+			{
+				grid : [ // the grid of boxes or walls
+					[1,0,0,0,1,6,5,3,4],
+					[0,1,0,0,0,3,2,1,4],
+					[0,1,0,0,0,0,0,0,2],
+					[0,0,0,0,0,0,0,0,7],
+					[0,1,1,1,0,0,0,0,0]
+				],
+				goals : [ // 
+					[3,2], 
+					[5,2]
+				],
+				startPos : [3,3],
+				startDir : 1
+			},
 		],
-		goals : [ // 
-			[3,2], 
-			[5,2]
-		],
-		startPos : [3,3],
-		startDir : 1,
 		startCode : [
 			'/SOME TEST CODE',
 			'START:',
@@ -54,9 +60,40 @@ const ALL_LEVELS = [
 			'',
 			'/...YET'
 		]
+	},
+	{
+		name : 'Second Test',
+		description : ' Just a second level to look at',
+		versions : [	 
+			{
+				grid : [
+					[0,0,0],
+					[0,1,0],
+					[0,0,0],
+				],
+				goals : [
+					[0,1]
+				],
+				startPos : [0,0],
+				startDir : 3,
+			},
+		],
+		startCode : [
+			'/TEST LEVEL'
+		]
 	}
 ];
 
+/*
+	puzzle ideas
+	
+	single row, teach push and pull (tutorial)
+	using rotation to count (counting)
+	two rows of boxes (repetition)
+	row of boxes that have to either be on the top or middle row
+		(this could include randomized solutions)
+
+*/
 
 const solids = [
 	false,
@@ -95,28 +132,141 @@ const emptyish = [
 
 */
 
-let compiledCode // compiled version of the text [[inst ID, data, line number], ..]
-let isCompiled
-let executingLine // line that's next to be executed
-let lastExecutedLine
-let isRunning
-let autoRun
-let autoRunDelay
+let compiledCode; // compiled version of the text [[inst ID, data, line number], ..]
+let isCompiled;
+let executingLine; // line that's next to be executed
+let lastExecutedLine;
+let isRunning;
+let autoRun;
+let autoRunDelay;
+let levelTime;
 
+let currentScene;
+let currentLevel;
+let currentVersion;
+let currentSolution;
+
+let levelCursor;
+
+let extraMenuCursor;
+let extraMenuPage;
+const extraMenuOptions = ['View Manuel', 'Return to Level Select']
+let gameManuel = [
+// done like this since I want it formatted in a very specific way
+//                                             | \(text limit, inclusive)
+'  The Goal of each level is to place a box on    \
+each target. Write instructions in the editor    \
+and watch your robot go!                         '
+,
+' < Scoring >                                     \
+                                                 \
+Each level is scored in two ways.                \
+                                                 \
+First, by how many characters you used in your   \
+code. Comments do not count towards that amount. \
+(Make comments using "/")                        \
+                                                 \
+Second, by how many steps it takes to complete   \
+the level.'
+,
+' < [dir] Words >                                 \
+                                                 \
+LEFT  - Represents that direction.               \
+RIGHT -                                          \
+UP    -                                          \
+DOWN  -                                          \
+                                                 \
+FORWARD - The direction the robot is facing.     '
+,
+' < Movement Instructions >                       \
+                                                 \
+MOV [dir] - Moves in the direction,              \
+            pushing any blocks in the way.       \
+                                                 \
+PUL [dir] - Similar to MOV, but pulls a block    \
+            if there\'s one in the opposite       \
+            direction.                           \
+                                                 \
+FCE [dir] - Makes the robot face that direction. \
+                                                 \
+ROT [LEFT/RIGHT] - Rotates the robot 90 degrees. '
+,
+' < Logic Instructions >                          \
+                                                 \
+CHK [dir] - Sets state to TRUE if there is a     \
+            block in that direction,             \
+            otherwise FALSE.                     \
+                                                 \
+CHF [dir] - Sets state to TRUE if facing  the    \
+            given direction.                     \
+            (The robot always faces forward.)    \
+                                                 \
+SET [TRUE/FALSE] - Sets the state of the robot.  '
+,
+' < Jump Instructions >                          \
+                                                 \
+[any]:      - Creates a label.                   \
+                                                 \
+JMP [label] - Jumps to label.                    \
+                                                 \
+JMT [label] - Jumps to label if state is TRUE.   \
+                                                 \
+JMF [label] - Jumps to label if state is FALSE.  '
+];
+
+// for(let i = 0; i < gameManuel.length; i++){
+// 	let c = gameManuel[i].split('\n');
+// 	for(let j = 0; j < c.length; j++){
+// 		c[j] = c[j].trim()
+// 		if(c[j].length > 48){
+// 			c.splice(j,0,c[j].slice(0, 48));
+// 			c[j+1] = c[j+1].slice(48)
+// 		}
+// 		c[j] = c[j].trim()
+// 		while(c[j].length < 48){
+// 			c[j] += ' '
+// 		}
+// 	}
+// 	gameManuel[i] = c.join()
+// }
+
+
+let userSave;
 /*
-	puzzle ideas
-	
-	single row, teach push and pull (tutorial)
-	using rotation to count (counting)
-	two rows of boxes (repetition)
+	loaded state
 
-*/
+	[
+		{
+			bestTime: 25, 
+			bestcharCount: 50,
+			solutions: [
+				{
+					time: 0, (not solved)
+					charCount: 50
+					code: [
+						'START:',
+						'JMP START'
+					]
+				},
+				... (one per solution)
+			]
+		},
+		... (one per level)
+	]
+
+	string state
+
+	bestTime~bestCharCount~time_charCount_code_code_code~time_charCount_code_...=...| ...
+	| seperates level data
+	~ seperates bests and each solution
+	_ seperates level time, charcount, and each line of code
+
 
 /*
 	instructions
 
 	CHK [dir] - sets state to true if there is a block in that direction, otherwise false
-	ISF [dir] - sets state to true if facing given direction(though robot is always facing forward)
+	CHF [dir] - sets state to true if facing given direction(though robot is always facing forward)
 	SET [TRUE/FALSE]
 	
 	JMP [label] - jumps to label
@@ -145,37 +295,94 @@ function getName()
 	return 'Soko Code';
 }
 
+function createEmptyData(){
+	s = '';
+	for(let i = 0; i < ALL_LEVELS.length; i++){
+		if(i > 0) s += '|';
+		s += "0~0";
+	}
+	saveData(s);
+	return s;
+}
+
+function loadUserData(){
+	userSave = [];
+
+	d = loadData()
+	if(d.length == 0)
+		d = createEmptyData()
+
+	let levData = d.split('|');
+
+	for(let i = 0; i < levData.length; i++){
+		let solData = levData[i].split('~');
+
+		let entry = {
+			bestTime : parseInt(solData[0]),
+			bestCharCount : parseInt(solData[1]),
+			solutions : []
+		};
+
+		for(let j = 2; j < solData.length; j++){
+			let indvData = solData[j].split('_')
+			entry.solutions.push({
+				time : parseInt(indvData[0]),
+				charCount : parseInt(indvData[1]),
+				code : indvData.slice(2)
+			});
+		}
+
+		userSave.push(entry)
+	}
+}
+
+function saveUserData(){
+	s = ''
+	for(let i = 0; i < userSave.length; i++){
+		if(i > 0) s += '|';
+		data = userSave[i]
+		s += data.bestTime + '~' + data.bestCharCount;
+		for(let j = 0; j < data.solutions.length; j++){
+			sol = data.solutions[j];
+			s += '~' + sol.time 
+			s += '_' + sol.charCount 
+			s += '_' + sol.code.join('_');
+		}
+	}
+	saveData(s)
+}
+
 function onConnect()
 {
 	// Reset the server variables when a new user connects:
-	lastKey = '';
-	keyBuffer = loadData();
+
+	loadUserData();
+
 	cursorX = cursorY = 0;
-	codeText = loadData().split('\n');
-	if(codeText[0].length == 0){
-		codeText = [
-			'/SOME TEST CODE',
-			'START:',
-			'MOV RIGHT',
-			'JMP START',
-			'',
-			'/...YET'
-		];
-	}
 	cursorBlink = 0;
-
+	
 	robotX = robotY = 3;
-	robotDir = 0
-	robotState = false
-	robotTrapped = false
+	robotDir = 0;
+	robotState = false;
+	robotTrapped = false;
+	
+	compiledCode = [];
+	executingLine = -1;
+	lastExecutedLine = 0;
+	isCompiled = false;
+	isRunning = false;
+	autoRun = false;
+	autoRunDelay = 0;
+	levelTime = 0;
 
-	compiledCode = []
-	executingLine = -1
-	lastExecutedLine = 0
-	isCompiled = false
-	isRunning = false
-	autoRun = false
-	autoRunDelay = 0
+	currentScene = 0;
+	currentLevel = 0;
+	currentVersion = 0;
+	currentSolution = 0;
+
+	levelCursor = 0;
+	extraMenuCursor = 0;
+	extraMenuPage = 0;
 }
 
 // - - - - Drawing Functions - - - -
@@ -313,6 +520,97 @@ function drawLevel(){
 		drawRobotTop(14, robotX * 4 + sx, robotY * 3 + sy, robotDir);
 }
 
+function drawMainBoxes(){
+	// Text Editing Box
+	drawBox(10, 0, 0, 17, 20);
+	// fillArea('═', 10, 0, 18, 56, 1)
+	// drawText('╩', 10, 0, 18)
+	// drawText('╩', 10, 16, 18)
+	fillArea('═', 10, 17, 18, 56, 1);
+	drawText('╣', 10, 0, 18);
+	drawText('╠', 10, 16, 18);
+}
+
+function drawTitleScreen(){
+	drawText('Soko Code', 13, 3,3)
+	drawText('By Werxzy', 13, 3,4)
+	drawText('Press Any Key', 13, 3,4)
+	// drawTextWrapped(loadData(), 13, 1,6, 50) // just to read user data for testing
+}
+
+function drawLevelSelection(){
+	drawMainBoxes()
+	for(let i = 0; i < ALL_LEVELS.length; i++){
+		drawText(ALL_LEVELS[i].name, levelCursor == i ? 17 : 8, 1,i+1)
+	}
+	drawText('>', 17, 0, levelCursor + 1)
+}
+
+function drawLevelScreen(){
+	if(isRunning && autoRun && currentScene == 2){
+		if(autoRunDelay++ >= 15){
+			codeStep()
+			autoRunDelay = 0
+		}
+	}
+
+	drawLevel();
+
+	drawMainBoxes();
+
+	for(let i = 0; i < codeText.length; i++){
+		drawText(codeText[i], 10, 1, i + 1);
+	} 
+
+	if(isRunning){
+		drawText('>', 17, 0, lastExecutedLine + 1);
+	}
+	else{
+		cursorBlink += 1;
+		cursorBlink %= 30;
+		if(cursorBlink < 15 && currentScene == 2){
+			drawText('█', 10, cursorX + 1, cursorY + 1);
+		}
+	}
+	
+	if(currentScene == 2){
+		if(isRunning){
+			drawText('(1) Run  (2) Step  (3) Stop  ', 10, 17, 19);
+
+			statusText = 'Time:    State:' + (robotTrapped ? 'Stuck' : robotState ? ' TRUE' : 'FALSE');
+			
+			f = ['RIGHT','   UP',' LEFT',' DOWN'][robotDir];
+			statusText += ' Facing:' + f;
+			
+			drawText(statusText, 10, 17, 0);
+
+			drawText('000', 3, 22, 0);
+			t = levelTime.toString();
+			drawText(t, 10, 25 - t.length, 0);
+		}
+		else
+			drawText('(1) Run  (2) Step           (ESC) Menu', 10, 17, 19)
+	}
+}
+
+function drawLevelExtraMenu(){
+	fillArea(' ', 0, 3, 3, 50, 14)
+	drawBox(10, 2, 2, 52, 16)
+
+	if(extraMenuPage == 0){
+		for(let i = 0; i < extraMenuOptions.length; i++){
+			drawText(extraMenuOptions[i], extraMenuCursor == i ? 17 : 10, 4, 4 + i * 2)
+		}
+		drawText('>', 17, 3, 4 + extraMenuCursor * 2)
+	}
+	else if(extraMenuPage == 1){
+		drawTextWrapped(gameManuel[extraMenuCursor], 10, 4, 4, 48)
+		drawText('(Arrow Keys) Turn Page', 10, 17,19)
+	}
+	
+	drawText('(ESC) Back', 10, 45, 19)
+}
+
 // - - - - Puzzle Functions - - - -
 
 function getDir(dir){
@@ -405,6 +703,45 @@ function testRobotMove(key){
 	}
 }
 
+function loadLevel(number, version, solutionNumber){
+	level = []
+	goals = []
+	filledHoles = []
+
+	let loading = ALL_LEVELS[number].versions[version]
+
+	for(let i = 0; i < loading.grid.length; i++)
+		level[i] = loading.grid[i].slice()
+
+	for(let i = 0; i < loading.goals.length; i++)
+		goals[i] = loading.goals[i].slice()
+
+	robotX = loading.startPos[0]
+	robotY = loading.startPos[1]
+	robotDir = loading.startDir
+	robotState = false
+	robotTrapped = false
+
+	if(solutionNumber == -1){
+		solutionNumber = userSave[number].solutions.length
+		codeText = []
+		for(let i = 0; i < ALL_LEVELS[number].startCode.length; i++)
+			codeText[i] = ALL_LEVELS[number].startCode[i].slice()
+		
+		userSave[number].solutions.push({
+			time : 0,
+			charCount : 0,
+			code : codeText
+		})
+	}
+	else if(solutionNumber >= 0){
+		codeText = userSave[number].solutions[solutionNumber].code
+	}
+
+
+
+}
+
 // - - - - ~Programming~ functions - - - -
 
 
@@ -412,7 +749,7 @@ function testRobotMove(key){
 
 const keywords ={
 	'CHK': [0, 'dir'],
-	'ISF': [1, 'dir'],
+	'CHF': [1, 'dir'],
 	'SET': [2, 'bool'],
 	'JMP': [3, 'label'],
 	'JMT': [4, 'label'],
@@ -542,8 +879,8 @@ function codeStep(){
 		executingLine++;
 	
 	if(executingLine >= compiledCode.length) return; // Reached end of code
-
 	
+	levelTime++;
 	lastExecutedLine = executingLine;
 
 	switch(compiledCode[executingLine][0]){
@@ -555,7 +892,7 @@ function codeStep(){
 			robotState = insideLevel(sx, sy) && level[sy][sx] == 1;
 			break;
 
-		case 1: // ISF
+		case 1: // CHF
 			d = compiledCode[executingLine++][1];
 			robotState = robotFacing == d || d == 5;
 			break;
@@ -607,53 +944,22 @@ function codeStep(){
 // - - - - - - - - - - - - - - - -
 
 function onUpdate(){
-
-	if(isRunning && autoRun){
-		if(autoRunDelay++ >= 20){
-			codeStep()
-			autoRunDelay = 0
-		}
-	}
-
 	// It is safe to completely redraw the screen during every update:
 	clearScreen();
 
-	drawLevel();
-
-	// Text Editing Box
-	drawBox(10, 0, 0, 17, 20);
-	// fillArea('═', 10, 0, 18, 56, 1)
-	// drawText('╩', 10, 0, 18)
-	// drawText('╩', 10, 16, 18)
-	fillArea('═', 10, 17, 18, 56, 1);
-	drawText('╣', 10, 0, 18);
-	drawText('╠', 10, 16, 18);
-
-	for(let i = 0; i < codeText.length; i++){
-		drawText(codeText[i], 10, 1, i + 1);
-	} 
-
-	if(isRunning){
-		drawText('>', 17, 0, lastExecutedLine + 1);
+	switch(currentScene){
+		case 0: drawTitleScreen(); break;
+		case 1: drawLevelSelection(); break;
+		case 2: drawLevelScreen(); break;
+		case 3: 
+			drawLevelScreen(); 
+			drawLevelExtraMenu();
+			break;
 	}
-	else{
-		cursorBlink += 1;
-		cursorBlink %= 30;
-		if(cursorBlink < 15){
-			drawText('█', 10, cursorX + 1, cursorY + 1);
-		}
-	}
-	
-	if(isRunning)
-		drawText('(1) Run  (2) Step  (3) Stop  ', 10, 17, 19)
-	else
-		drawText('(1) Run  (2) Step           (ESC) Menu', 10, 17, 19)
 }
 
-function clamp(a, b, c){
-	if(a < b) return b;
-	if(a > c) return c;
-	return a;
+function clamp(a, b, c){ // Math.clamp doesn't exist for some reason?
+	return Math.min(Math.max(a,b),c);
 }
 
 function moveCursor(x, y){
@@ -711,7 +1017,13 @@ function editCode(key){
 	}
 	// Most normal keys
 	else if(key >= 32 && key < 127 && codeText[cursorY].length < codeWidthLimit){
-		codeText[cursorY] = codeText[cursorY].slice(0, cursorX) + String.fromCharCode(key).toUpperCase() + codeText[cursorY].slice(cursorX);
+		c = String.fromCharCode(key)
+
+		// shouldn't allow characters used for parsing save data
+		if('|~_'.indexOf(c) > -1) 
+			return
+
+		codeText[cursorY] = codeText[cursorY].slice(0, cursorX) + c.toUpperCase() + codeText[cursorY].slice(cursorX);
 		cursorX += 1;
 		change = true;
 		cursorBlink = 0
@@ -730,23 +1042,30 @@ function editCode(key){
 	case 20: // right arrow
 		moveCursor(1, 0);
 		break;
+	case 27: // escape
+		currentScene = 3;
+		break;
 	}
 
+
 	if(change){ // just in case we don't want it to get too overloaded?
-		saveData(codeText.join('\n'));
+		saveUserData()
 	}
 }
 
+function startRun(){
+	if(!isRunning){
+		isRunning = isCompiled = compile();
+		executingLine = 0
+		levelTime = 0
+	}
+}
 
-
-function onInput(key){
+function levelInput(key){
 	if(key >= 48 && key < 58){ // keys 0 to 9
 		switch(key - 48){
 			case 1: // run
-				if(!isRunning){
-					isRunning = isCompiled = compile();
-					executingLine = 0
-				}
+				startRun()
 				if(isCompiled){
 					autoRun = true
 					autoRunDelay = 0
@@ -754,28 +1073,91 @@ function onInput(key){
 				break;
 
 			case 2: // step
-				if(!isRunning){
-					isRunning = isCompiled = compile();
-					// these booleans are used in the same situation, may merge
-					executingLine = 0
-				}
+				startRun()
 				if(isCompiled){
 					autoRun = false
 					autoRunDelay = 0
 					codeStep()
 				}
-				
 				break;
 				
 			case 3: // stop
 				isRunning = false
 				executingLine = -1
 				autoRun = false
-				// TODO reset level
+				loadLevel(currentLevel, currentVersion, -2) 
 				break;
 		}
 	}
 	else if(!isRunning){
 		editCode(key);
 	}
+}
+
+function levelSelectInput(key){
+	switch(key){
+		case 17: // up arrow
+			levelCursor = Math.max(0, levelCursor - 1);
+			break;
+		case 18: // down arrow
+			levelCursor = Math.min(ALL_LEVELS.length - 1, levelCursor + 1);
+			break;
+		case 10: // enter key
+			currentLevel = levelCursor;
+			currentVersion = 0;
+			currentSolution = userSave[currentLevel].solutions.length - 1; // TODO
+			loadLevel(currentLevel, 0, currentSolution);
+			currentScene = 2;
+			break;
+	}
+}
+
+function extraMenuInput(key){
+	if(extraMenuPage == 0){
+		switch(key){
+			case 17: // up arrow
+				extraMenuCursor = Math.max(0, extraMenuCursor - 1);
+				break;
+			case 18: // down arrow
+				extraMenuCursor = Math.min(extraMenuOptions.length - 1, extraMenuCursor + 1);
+				break;
+			case 10: // enter key
+				if (extraMenuCursor == 0){
+					extraMenuPage = 1;
+					extraMenuCursor = 0;
+				}
+				else if (extraMenuCursor == 1){
+					saveUserData()
+					currentScene = 1
+				}
+				break;
+			case 27: // escape
+				currentScene = 2;
+				break;
+		}
+	}
+	else if(extraMenuPage == 1){
+		switch(key){
+			case 19: // left arrow
+				extraMenuCursor = Math.max(0, extraMenuCursor - 1);
+				break;
+			case 20: // right arrow
+				extraMenuCursor = Math.min(gameManuel.length - 1, extraMenuCursor + 1);
+				break;
+			case 27: // escape
+				extraMenuPage = 0;
+				extraMenuCursor = 0;
+				break;
+		}
+	}
+}
+
+function onInput(key){
+	switch(currentScene){
+		case 0: currentScene = 1; break;
+		case 1: levelSelectInput(key); break;
+		case 2: levelInput(key); break;
+		case 3: extraMenuInput(key); break;
+	}
+	
 }
