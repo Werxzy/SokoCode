@@ -54,7 +54,7 @@ const ALL_LEVELS = {
 		]
 	},
 	'Second Test' : {
-		description : ' Just a second level to look at',
+		description : ' Just a second level to look at, this is also a test of a really long description just to show what it would potentially look like.',
 		versions : [	 
 			{
 				grid : [
@@ -138,6 +138,8 @@ let currentVersion;
 let currentSolution;
 
 let levelCursor;
+let levelSolutionCursor;
+let levelSelectStage;
 
 let extraMenuCursor;
 let extraMenuPage;
@@ -325,6 +327,9 @@ function onConnect()
 	currentSolution = 0;
 
 	levelCursor = 0;
+	levelSolutionCursor = 0;
+	levelSelectStage = 0;
+
 	extraMenuCursor = 0;
 	extraMenuPage = 0;
 }
@@ -482,14 +487,70 @@ function drawTitleScreen(){
 	// drawTextWrapped(loadData(), 13, 1,6, 50) // just to read user data for testing
 }
 
+function drawLevelInfo(){
+	levelName = Object.keys(ALL_LEVELS)[levelCursor]
+	nameX = Math.floor(36.5 - levelName.length / 2)
+	drawText(levelName, 13, nameX, 1)
+	drawBox(6, nameX-1, 0, levelName.length+2, 3)
+	
+	drawTextWrapped(ALL_LEVELS[levelName].description,11,20,3, 33)
+
+	drawBox(6, 19, 2, 35, 8)
+	// drawBox(6, 19, 7, 35, 3)
+	drawBox(6, 19, 9, 35, 3)
+	drawBox(6, 19, 11, 35, 7)
+
+	// NOTE, I'm using a weird method of drawing text vertically that may break in a future bbs version.
+
+	drawTextWrapped('║ ║ ╠ ║ ╠', 6, 19, 7, 1);
+	drawTextWrapped('╣ ║ ╣ ║ ╣', 6, 53, 7, 1);
+	drawText('╩', 6, nameX-1, 2)
+	drawText('╩', 6, nameX+levelName.length, 2)
+	
+	drawTextWrapped('╔ ║ ╬ ║ ╬ ║ ║ ║ ║ ║ ╩', 6, 43, 7, 1);
+	drawTextWrapped('╦ ║ ╬ ║ ╬ ║ ║ ║ ║ ║ ╩', 6, 48, 7, 1);
+	drawText('════╦════', 6, 44, 7)
+
+
+	drawText('Best Scores', 13, 20, 10)
+	drawText('Time', 13, 44, 8)
+	drawText('Char', 13, 49, 8)
+
+	color = userSave[levelName].bestTime == 999 ? 6 : 13
+	t = String(userSave[levelName].bestTime)
+	drawText(t, color, 48 - t.length, 10)
+	t = String(userSave[levelName].bestCharCount)
+	drawText(t, color, 53 - t.length, 10)
+
+	sol = userSave[levelName].solutions
+	for(let i = 0; i < sol.length; i++){
+		// TODO? add solution naming?
+		drawText('Solution ' + (i+1), (levelSelectStage == 1 && levelSolutionCursor == i) ? 17 : 13, 20, 12 + i)
+		t = String(sol[i].time)
+		drawText(t, color, 48 - t.length, 12 + i)
+		t = String(sol[i].charCount)
+		drawText(t, color, 53 - t.length, 12 + i)
+	}
+
+	if(sol.length < 5)
+		drawText('+ New Solution + ', (levelSelectStage == 1 && levelSolutionCursor == sol.length) ? 17 : 13, 20, 12 + sol.length)
+	
+	if(levelSelectStage == 1)
+		drawText('>', 17, 19, 12 + levelSolutionCursor)
+}
+
 function drawLevelSelection(){
 	drawMainBoxes()
 	names = Object.keys(ALL_LEVELS);
 	for(let i = 0; i < names.length; i++){
 		drawText(names[i], levelCursor == i ? 17 : 8, 1,i+1)
 	}
-	drawText('>', 17, 0, levelCursor + 1)
+	if(levelSelectStage == 0)
+		drawText('>', 17, 0, levelCursor + 1)
+
+	drawLevelInfo();
 }
+
 
 function drawLevelScreen(){
 	if(isRunning && autoRun && currentScene == 2){
@@ -536,6 +597,7 @@ function drawLevelScreen(){
 		else
 			drawText('(1) Run  (2) Step           (ESC) Menu', 10, 17, 19)
 	}
+	
 }
 
 function drawLevelExtraMenu(){
@@ -1042,21 +1104,45 @@ function levelInput(key){
 }
 
 function levelSelectInput(key){
-	switch(key){
-		case 17: // up arrow
-			levelCursor = Math.max(0, levelCursor - 1);
-			break;
-		case 18: // down arrow
-			levelCursor = Math.min(Object.keys(ALL_LEVELS).length - 1, levelCursor + 1);
-			break;
-		case 10: // enter key
-			currentLevel = Object.keys(ALL_LEVELS)[levelCursor];
-			currentVersion = 0;
-			currentSolution = userSave[currentLevel].solutions.length - 1;
-			loadLevel(currentLevel, 0, currentSolution);
-			currentScene = 2;
-			cursorX = cursorY = 0
-			break;
+	if(levelSelectStage == 0){ // selecting a level
+		switch(key){
+			case 17: // up arrow
+				levelCursor = Math.max(0, levelCursor - 1);
+				break;
+			case 18: // down arrow
+				levelCursor = Math.min(Object.keys(ALL_LEVELS).length - 1, levelCursor + 1);
+				break;
+			case 10: // enter key
+				currentLevel = Object.keys(ALL_LEVELS)[levelCursor];
+				levelSelectStage = 1;
+				levelSolutionCursor = 0;
+				break;
+		}
+	}
+	else if(levelSelectStage == 1){ // selecting a solution
+		switch(key){
+			case 17: // up arrow
+				levelSolutionCursor = Math.max(0, levelSolutionCursor - 1);
+				break;
+			case 18: // down arrow
+				levelSolutionCursor = Math.min(userSave[currentLevel].solutions.length, levelSolutionCursor + 1);
+				levelSolutionCursor = Math.min(levelSolutionCursor, 4);
+				// this limits to 5 solutions, and accounts for the +new solution+ option.
+				break;
+			case 10: // enter key
+				currentVersion = 0;
+				if(levelSolutionCursor == userSave[currentLevel].solutions.length)
+					currentSolution = -1;
+				else
+					currentSolution = levelSolutionCursor;
+				loadLevel(currentLevel, 0, currentSolution);
+				currentScene = 2;
+				cursorX = cursorY = 0;
+				break;
+			case 27: // escape
+				levelSelectStage = 0;
+				break;
+		}
 	}
 }
 
