@@ -7,28 +7,82 @@ let codeWidthLimit = 15;
 let codeHeightLimit = 18;
 let cursorBlink;
 
-let robotX, robotY, robotDir, robotState;
+let robotX, robotY, robotDir, robotState, robotTrapped;
 
 let level = [
 	[1,0,0,0,1,6,5,3,4],
 	[0,1,0,0,0,3,2,1,4],
 	[0,1,0,0,0,0,0,0,2],
-	[0,0,0,0,0,0,0,0,0],
+	[0,0,0,0,0,1,7,0,7],
 	[0,1,1,1,0,0,0,0,0]
 ];
+let filledHoles = [] // just for looks, shouldn't cause any puzzle interaction
 
 let goals = [[3,2], [5,2]]
 // max level size is 9 by 5 
 
+const ALL_LEVELS = [
+	{
+		grid : [ // the grid of boxes or walls
+			[1,0,0,0,1,6,5,3,4],
+			[0,1,0,0,0,3,2,1,4],
+			[0,1,0,0,0,0,0,0,2],
+			[0,0,0,0,0,0,0,0,7],
+			[0,1,1,1,0,0,0,0,0]
+		],
+		goals : [ // 
+			[3,2], 
+			[5,2]
+		],
+		startPos : [3,3],
+		startDir : 1,
+		startCode : [
+			'/SOME TEST CODE',
+			'START:',
+			'ROT LEFT',
+			'PUL FORWARD',
+			'MOV LEFT',
+			'MID: ROT LEFT',
+			'CHK FORWARD',
+			'JMT START',
+			'MOV RIGHT',
+			'JMP MID',
+			'',
+			'/NOT MEANT TO',
+			'/DO ANYTHING',
+			'/IMPORTANT.',
+			'',
+			'/...YET'
+		]
+	}
+];
 
-let solids = [
+
+const solids = [
 	false,
 	false,
-	true,
-	true,
-	true,
-	true
+
+	true, // .
+	true, // -
+	true, // |
+	true, // +
+	true, // []
+
+	false
 ]
+
+const emptyish = [
+	true,
+	false,
+
+	false,
+	false,
+	false,
+	false,
+	false,
+
+	true
+];
 /*
 	tiles
 	0 = empty
@@ -52,8 +106,9 @@ let autoRunDelay
 /*
 	puzzle ideas
 	
-	single row, teach push and pull
-	using rotation to count
+	single row, teach push and pull (tutorial)
+	using rotation to count (counting)
+	two rows of boxes (repetition)
 
 */
 
@@ -101,26 +156,19 @@ function onConnect()
 		codeText = [
 			'/SOME TEST CODE',
 			'START:',
-			'ROT LEFT',
-			'PUL FORWARD',
-			'MOV LEFT',
-			'MID: ROT LEFT',
-			'CHK FORWARD',
-			'JMT START',
 			'MOV RIGHT',
-			'JMP MID',
-			'',
-			'/NOT MEANT TO',
-			'/DO ANYTHING',
-			'/IMPORTANT.',
+			'JMP START',
 			'',
 			'/...YET'
 		];
 	}
 	cursorBlink = 0;
+
 	robotX = robotY = 3;
 	robotDir = 0
 	robotState = false
+	robotTrapped = false
+
 	compiledCode = []
 	executingLine = -1
 	lastExecutedLine = 0
@@ -192,6 +240,11 @@ function drawRobotTop(color, x, y, dir){
 	}
 }
 
+function drawHole(x, y, width, height){
+	fillArea('█', 5, x+1, y+1, width, height);
+	fillArea('█', 2, x+2, y+2, width-1, height-1);
+}
+
 function drawLevel(){
 
 	let sx = 19, sy = 2;
@@ -202,6 +255,11 @@ function drawLevel(){
 
 	for(let i = 0; i < goals.length; i++){
 		drawBox(8, goals[i][0] * 4 + sx + 1, goals[i][1] * 3 + sy + 1, 3, 2);
+	}
+
+	for(let i = 0; i < filledHoles.length; i++){
+		p = filledHoles[i]
+		drawBoxTop(6, p[0]*4 + sx + 1, p[1]*3 + sy + 1, 3, 2); break;
 	}
 
 	//draws the bottom components of the level
@@ -220,12 +278,16 @@ function drawLevel(){
 					drawBoxBottom(3, dx, dy, 3, 3, 0); 
 					break;
 				case 6: drawBoxBottom(3, dx, dy, 4, 3, 0); break;
+				case 7: drawHole(dx, dy, 3, 2); break;
 			}
 			
 		}
 	}
 
-	drawBoxBottom(8, robotX * 4 + sx, robotY * 3 + sy, 3, 2);
+	if(robotTrapped)
+		drawRobotTop(12, robotX * 4 + sx + 1, robotY * 3 + sy + 1, robotDir);
+	else
+		drawBoxBottom(8, robotX * 4 + sx, robotY * 3 + sy, 3, 2);
 	
 	//draws the top components of the level
 	for(let y = 0; y < level.length; y++){
@@ -247,7 +309,8 @@ function drawLevel(){
 		}
 	}
 
-	drawRobotTop(14, robotX * 4 + sx, robotY * 3 + sy, robotDir);
+	if(!robotTrapped)
+		drawRobotTop(14, robotX * 4 + sx, robotY * 3 + sy, robotDir);
 }
 
 // - - - - Puzzle Functions - - - -
@@ -280,7 +343,7 @@ function move(dir){
 	let valid = true;
 
 	
-	while((valid = insideLevel(sx, sy) && !solids[level[sy][sx]]) && level[sy][sx] != 0){
+	while((valid = (insideLevel(sx, sy) && !solids[level[sy][sx]])) && !emptyish[level[sy][sx]]){
 		sx += d[0];
 		sy += d[1];
 		moveCount += 1;
@@ -290,6 +353,7 @@ function move(dir){
 	if(valid){
 		robotX += d[0];
 		robotY += d[1];
+		robotTrapped = level[robotY][robotX] == 7 // if robot got trapped in a hole
 
 		sx = robotX;
 		sy = robotY;
@@ -298,11 +362,21 @@ function move(dir){
 			c = level[sy][sx]
 			level[sy][sx] = prev
 			prev = c
+
 			sx += d[0];
 			sy += d[1];
 		}
-		level[sy][sx] = prev
+
+		c = level[sy][sx]
+		if(c == 7 && prev == 1){ // if there was a box and now a hole, fill it
+			filledHoles.push([sx, sy])
+			level[sy][sx] = 0
+		}
+		else
+			level[sy][sx] = prev
 	}
+
+	
 
 	return valid
 }
@@ -463,7 +537,7 @@ function compile(){
 
 
 function codeStep(){
-	if(!isCompiled) return
+	if(!isCompiled || robotTrapped) return
 	while(executingLine < compiledCode.length && compiledCode[executingLine].length == 0)
 		executingLine++;
 	
@@ -569,8 +643,11 @@ function onUpdate(){
 			drawText('█', 10, cursorX + 1, cursorY + 1);
 		}
 	}
-
-	drawText('(1) Run  (2) Step  (3) Stop  (ESC) Exit', 10, 17, 19)
+	
+	if(isRunning)
+		drawText('(1) Run  (2) Step  (3) Stop  ', 10, 17, 19)
+	else
+		drawText('(1) Run  (2) Step           (ESC) Menu', 10, 17, 19)
 }
 
 function clamp(a, b, c){
