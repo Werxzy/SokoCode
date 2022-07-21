@@ -156,6 +156,7 @@ let prevBestChar;
 let currentScene;
 let currentLevel;
 let currentVersion;
+let testingVersion;
 let currentSolution;
 
 let levelCursor;
@@ -347,6 +348,7 @@ function onConnect()
 	currentScene = 0;
 	currentLevel = 0;
 	currentVersion = 0;
+	testingVersion = 0;
 	currentSolution = 0;
 
 	levelCursor = 0;
@@ -491,6 +493,14 @@ function drawLevel(){
 
 	if(!robotTrapped)
 		drawRobotTop(14, robotX * 4 + sx, robotY * 3 + sy, robotDir);
+
+	let count = ALL_LEVELS[currentLevel].versions.length
+	if(count > 1){
+		let t = ' ' + (currentVersion + 1) + '/' + count + ' ';
+		let x = sx + level[0].length * 4 - t.length;
+		let y = sy + level.length * 3;
+		drawText(t, 3, x, y)
+	}
 }
 
 function drawMainBoxes(){
@@ -636,7 +646,7 @@ function drawLevelScreen(){
 	
 	if(currentScene == 2){
 		if(isRunning){
-			drawText('(1) Run  (2) Step  (3) Stop  ', 10, 17, 19);
+			drawText('(1) Run (2) Step (3) Stop  ', 10, 17, 19);
 
 			statusText = 'Time:     State:' + (robotTrapped ? 'STUCK' : robotState ? ' TRUE' : 'FALSE');
 			
@@ -649,8 +659,12 @@ function drawLevelScreen(){
 			t = levelTime.toString();
 			drawText(t, 10, 26 - t.length, 0);
 		}
-		else
-			drawText('(1) Run  (2) Step           (ESC) Menu', 10, 17, 19)
+		else{
+			if(ALL_LEVELS[currentLevel].versions.length > 1)
+				drawText('(1) Run (2) Step (3) Cycle  (ESC) Menu', 10, 17, 19);
+			else
+				drawText('(1) Run (2) Step            (ESC) Menu', 10, 17, 19);
+		}		
 	}
 	
 }
@@ -1047,7 +1061,9 @@ function checkIfSolved(){
 			return false; // NOT solved
 	}
 
-	if(currentVersion + 1 == ALL_LEVELS[currentLevel].versions.length){
+	let v = (currentVersion + 1) % ALL_LEVELS[currentLevel].versions.length;
+
+	if(v == testingVersion){
 		//solved all variations of the puzzle
 
 		let c = getCodeCharCount();
@@ -1071,13 +1087,13 @@ function checkIfSolved(){
 	
 		saveUserData();
 
-		isRunning = false
-		executingLine = -1
-		autoRun = false
+		isRunning = false;
+		executingLine = -1;
+		autoRun = false;
 		currentScene = 4;
 	}
 	else{
-		currentVersion += 1;
+		currentVersion = v;
 		loadLevel(currentLevel, currentVersion, -2);
 	}
 
@@ -1216,6 +1232,7 @@ function startRun(){
 		isRunning = isCompiled = compile();
 		executingLine = 0
 		levelTime = 0
+		testingVersion = currentVersion
 	}
 }
 
@@ -1240,11 +1257,18 @@ function levelInput(key){
 				break;
 				
 			case 3: // stop
-				isRunning = false
-				executingLine = -1
-				autoRun = false
-				currentVersion = 0
-				loadLevel(currentLevel, currentVersion, -2) 
+				if(isRunning){
+					isRunning = false
+					executingLine = -1
+					autoRun = false
+					currentVersion = 0
+					loadLevel(currentLevel, currentVersion, -2) 
+				}
+				else{
+					currentVersion += 1
+					currentVersion %= ALL_LEVELS[currentLevel].versions.length
+					loadLevel(currentLevel, currentVersion, -2) 
+				}
 				break;
 		}
 	}
@@ -1295,7 +1319,7 @@ function levelSelectInput(key){
 				// this limits to 5 solutions, and accounts for the +new solution+ option.
 				break;
 			case 10: // enter key
-				currentVersion = 0;
+				testingVersion = currentVersion = 0;
 				if(levelSolutionCursor == userSave[currentLevel].solutions.length)
 					currentSolution = -1;
 				else
