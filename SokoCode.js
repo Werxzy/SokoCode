@@ -125,6 +125,7 @@ const emptyish = [
 
 let compiledCode; // compiled version of the text [[inst ID, data, line number], ..]
 let isCompiled;
+let errorMessage;
 let executingLine; // line that's next to be executed
 let lastExecutedLine;
 let isRunning;
@@ -140,6 +141,7 @@ let currentSolution;
 let levelCursor;
 let levelSolutionCursor;
 let levelSelectStage;
+let levelDeleteKey;
 
 let extraMenuCursor;
 let extraMenuPage;
@@ -314,6 +316,7 @@ function onConnect()
 	
 	compiledCode = [];
 	executingLine = -1;
+	errorMessage = []
 	lastExecutedLine = 0;
 	isCompiled = false;
 	isRunning = false;
@@ -329,6 +332,7 @@ function onConnect()
 	levelCursor = 0;
 	levelSolutionCursor = 0;
 	levelSelectStage = 0;
+	levelDeleteKey = 0;
 
 	extraMenuCursor = 0;
 	extraMenuPage = 0;
@@ -535,8 +539,15 @@ function drawLevelInfo(){
 	if(sol.length < 5)
 		drawText('+ New Solution + ', (levelSelectStage == 1 && levelSolutionCursor == sol.length) ? 17 : 13, 20, 12 + sol.length)
 	
-	if(levelSelectStage == 1)
+	if(levelSelectStage == 1){
 		drawText('>', 17, 19, 12 + levelSolutionCursor)
+		if(levelDeleteKey > 0){
+			userSave[currentLevel].solutions
+			for(let i = 0; i < 23; i += (3 - levelDeleteKey)){
+				drawText('⚉', 4, 20 + i, 12 + levelSolutionCursor)
+			}
+		}
+	}
 }
 
 function drawLevelSelection(){
@@ -547,8 +558,12 @@ function drawLevelSelection(){
 	}
 	if(levelSelectStage == 0)
 		drawText('>', 17, 0, levelCursor + 1)
-
+		
 	drawLevelInfo();
+		
+	drawText("(Enter) Select              (ESC) Back", 10, 17, 19)
+	if(levelSelectStage == 1 && levelSolutionCursor < userSave[currentLevel].solutions.length)
+		drawText('(DDD) Delete', 10, 32, 19)
 }
 
 
@@ -568,6 +583,25 @@ function drawLevelScreen(){
 		drawText(codeText[i], 10, 1, i + 1);
 	} 
 
+	if(errorMessage.length > 0){
+		y = Math.min(16, errorMessage[0])
+		drawBox(10, 16, y, errorMessage[1].length + 3, 3)
+		drawText(errorMessage[1], 17, 18, y + 1)
+		if(errorMessage[0] == 0){
+			drawTextWrapped('═ < ╔', 10, 16, 0, 1)
+		}
+		else if(errorMessage[0] < 17){
+			drawTextWrapped('╚ < ╔', 10, 16, y, 1)
+		}
+		else{
+			drawTextWrapped('╚ = <', 10, 16, 16, 1)
+		}
+		if(y == 16){
+			drawText('╩', 10, 18 + errorMessage[1].length, 18)
+			
+		}
+	}
+
 	if(isRunning){
 		drawText('>', 17, 0, lastExecutedLine + 1);
 	}
@@ -583,7 +617,7 @@ function drawLevelScreen(){
 		if(isRunning){
 			drawText('(1) Run  (2) Step  (3) Stop  ', 10, 17, 19);
 
-			statusText = 'Time:     State:' + (robotTrapped ? 'Stuck' : robotState ? ' TRUE' : 'FALSE');
+			statusText = 'Time:     State:' + (robotTrapped ? 'STUCK' : robotState ? ' TRUE' : 'FALSE');
 			
 			f = ['RIGHT','   UP',' LEFT',' DOWN'][robotDir];
 			statusText += '  Facing:' + f;
@@ -793,18 +827,23 @@ function compile(){
 
 		for(let j = 0; j < possible.length - 1; j++){
 			L = possible[j].trim()
-
+			
 			if(L.indexOf(' ') > -1){
 				// ERROR, no extra spaces allowed
+				errorMessage = [i, 'Spaces in labesls not allowed.'];
 				return false
 			}
-			else if(L in labels){
+			if(L in keywords || L in dirwords){
+				// probably excessive, but it helps with writing clearer code
+				errorMessage = [i, 'Can\'t use reserved word as label.'];
+				return false
+			}
+			if(L in labels){
 				// ERROR, duplicate label
+				errorMessage = [i, 'Duplicate label.'];
 				return false
 			}
-			else{
-				labels[L] = i
-			}
+			labels[L] = i
 		}
 	}
 
@@ -828,6 +867,8 @@ function compile(){
 		
 		if(words.length > 2){
 			// ERROR, too many words
+			// also probably a bit excessive
+			errorMessage = [i, 'Too many words, limit 2 per line.']
 			return false
 		}
 
@@ -838,6 +879,7 @@ function compile(){
 				}
 				else{
 					// ERROR, invalid direction
+					errorMessage = [i, 'Invalid direction.']
 					return false
 				}
 			}
@@ -847,6 +889,7 @@ function compile(){
 				}
 				else{
 					// ERROR, invalid label
+					errorMessage = [i, 'Missing label.']
 					return false
 				}
 			}
@@ -857,6 +900,7 @@ function compile(){
 				}
 				else{
 					// ERROR, invalid direction
+					errorMessage = [i, 'Invalid state, use TRUE/FALSE.']
 					return false
 				}
 			}
@@ -867,12 +911,14 @@ function compile(){
 				}
 				else{
 					// ERROR, invalid direction
+					errorMessage = [i, 'Invalid direction, use LEFT/RIGHT.']
 					return false
 				}
 			}
 		}
 		else{
 			// ERROR, nonexistant command
+			errorMessage = [i, 'Invalid instruction.']
 			return false
 		}
 	}
@@ -987,6 +1033,8 @@ function moveCursor(x, y){
 
 function editCode(key){
 	let change = false;
+	errorMessage = []; // clear error message
+
 	// Backspace
 	if(key == 8){
 		if(cursorX == 0){ // if on first character
@@ -1117,10 +1165,28 @@ function levelSelectInput(key){
 				levelSelectStage = 1;
 				levelSolutionCursor = 0;
 				break;
+			case 27: // escape
+				currentScene = 0;
+				break;
 		}
+		levelDeleteKey = 0
 	}
 	else if(levelSelectStage == 1){ // selecting a solution
+		if(key == 100 || key == 68){
+			if(levelSolutionCursor < userSave[currentLevel].solutions.length 
+					&& ++levelDeleteKey >= 3){
+				levelDeleteKey = 0
+				userSave[currentLevel].solutions.splice(levelSolutionCursor, 1)
+				saveUserData()
+			}
+		}
+		else{
+			levelDeleteKey = 0
+		}
 		switch(key){
+			case 100:
+			case 68:
+				break;
 			case 17: // up arrow
 				levelSolutionCursor = Math.max(0, levelSolutionCursor - 1);
 				break;
