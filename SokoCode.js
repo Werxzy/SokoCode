@@ -68,9 +68,26 @@ const ALL_LEVELS = {
 				startPos : [0,0],
 				startDir : 3,
 			},
+			{
+				grid : [
+					[0,0,0],
+					[0,1,0],
+					[0,0,0],
+				],
+				goals : [
+					[0,1]
+				],
+				startPos : [2,2],
+				startDir : 3,
+			},
 		],
 		startCode : [
-			'/TEST LEVEL'
+			'MOV UP',
+			'MOV UP',
+			'MOV RIGHT',
+			'MOV RIGHT',
+			'MOV DOWN',
+			'MOV LEFT'
 		]
 	}
 };
@@ -133,6 +150,9 @@ let autoRun;
 let autoRunDelay;
 let levelTime;
 
+let levelScore;
+let prevBestChar;
+
 let currentScene;
 let currentLevel;
 let currentVersion;
@@ -158,8 +178,8 @@ and watch your robot go!                         '
 Each level is scored in two ways.                \
                                                  \
 First, by how many characters you used in your   \
-code. Comments do not count towards that amount. \
-(Make comments using "/")                        \
+code. Whitespace and comments do not count       \
+towards this amount. (Make comments using "/")   \
                                                  \
 Second, by how many steps it takes to complete   \
 the level.'
@@ -192,13 +212,13 @@ CHK [dir] - Sets state to TRUE if there is a     \
             block in that direction,             \
             otherwise FALSE.                     \
                                                  \
-CHF [dir] - Sets state to TRUE if facing  the    \
-            given direction.                     \
+CHF [dir] - Sets state to TRUE if the robot is   \
+            facing the given direction.          \
             (The robot always faces forward.)    \
                                                  \
 SET [TRUE/FALSE] - Sets the state of the robot.  '
 ,
-' < Jump Instructions >                          \
+' < Jump Instructions >                           \
                                                  \
 [any]:      - Creates a label.                   \
                                                  \
@@ -530,6 +550,7 @@ function drawLevelInfo(){
 	for(let i = 0; i < sol.length; i++){
 		// TODO? add solution naming?
 		drawText('Solution ' + (i+1), (levelSelectStage == 1 && levelSolutionCursor == i) ? 17 : 13, 20, 12 + i)
+		color = sol[i].time == 999 ? 6 : 13
 		t = String(sol[i].time)
 		drawText(t, color, 48 - t.length, 12 + i)
 		t = String(sol[i].charCount)
@@ -654,6 +675,33 @@ function drawLevelExtraMenu(){
 	drawText('(ESC) Back', 10, 45, 19)
 }
 
+function drawWinScreen(){
+	sx = 25
+	sy = 5
+
+	fillArea(' ', 0, sx+10, sy+3, 9, 5)
+	drawBox(10, sx+9, sy, 11, 3)
+	drawBox(10, sx, sy+2, 20, 7)
+	drawBox(10, sx, sy+4, 20, 3)
+
+	drawTextWrapped('╠ ║ ╠', 10, sx, sy+4, 1)
+	drawTextWrapped('╬ ║ ╬ ║ ╬ ║ ╩', 10, sx+9, sy+2, 1)
+	drawTextWrapped('╦ ║ ╬ ║ ╬ ║ ╬ ║ ╩', 10, sx+14, sy, 1)
+	drawTextWrapped('╣ ║ ╣ ║ ╣ ║ ╝', 10, sx+19, sy+2, 1)
+
+	drawText('Time║Char', 10, 10+sx, 1+sy)
+	drawText('Old Best', 10, 1+sx, 3+sy)
+	drawText('New Best', 10, 1+sx, 5+sy)
+	drawText('Score   ', 10, 1+sx, 7+sy)
+
+	for(let i = 0; i < 6; i++){
+		color = levelScore[i] == '999' ? 6 : 10
+		drawText(levelScore[i], color, 14+sx - levelScore[i].length + (5 * (i%2)), 3+sy + Math.floor(i/2) * 2)
+	}
+
+	drawText('(ESC) Exit', 10, 45, 19)
+}
+
 // - - - - Puzzle Functions - - - -
 
 function getDir(dir){
@@ -764,9 +812,10 @@ function loadLevel(levelName, version, solutionNumber){
 	robotDir = loading.startDir
 	robotState = false
 	robotTrapped = false
+	executingLine = 0
 
 	if(solutionNumber == -1){
-		solutionNumber = userSave[levelName].solutions.length
+		currentSolution = userSave[levelName].solutions.length
 		codeText = []
 		for(let i = 0; i < ALL_LEVELS[levelName].startCode.length; i++)
 			codeText[i] = ALL_LEVELS[levelName].startCode[i].slice()
@@ -780,9 +829,6 @@ function loadLevel(levelName, version, solutionNumber){
 	else if(solutionNumber >= 0){
 		codeText = userSave[levelName].solutions[solutionNumber].code
 	}
-
-
-
 }
 
 // - - - - ~Programming~ functions - - - -
@@ -813,9 +859,6 @@ const dirwords = {
 }
 
 function compile(){
-
-	// TODO error codes
-
 	// get labels
 	var labels = {}
 	for(let i = 0; i < codeText.length; i++){
@@ -929,7 +972,9 @@ function compile(){
 
 
 function codeStep(){
-	if(!isCompiled || robotTrapped) return
+	if(!isCompiled) return;
+	if(checkIfSolved()) return;
+	if(robotTrapped) return
 	while(executingLine < compiledCode.length && compiledCode[executingLine].length == 0)
 		executingLine++;
 	
@@ -992,8 +1037,60 @@ function codeStep(){
 			rotateRobot(compiledCode[executingLine++][1]);
 			break;
 	}
+
+	
 }
 
+function checkIfSolved(){
+	for(let i = 0; i < goals.length; i++){
+		if(level[goals[i][1]][goals[i][0]] != 1)
+			return false; // NOT solved
+	}
+
+	if(currentVersion + 1 == ALL_LEVELS[currentLevel].versions.length){
+		//solved all variations of the puzzle
+
+		let c = getCodeCharCount();
+		let prevTime = userSave[currentLevel].bestTime;
+		let prevChar = userSave[currentLevel].bestCharCount;
+		userSave[currentLevel].bestTime = Math.min(prevTime, levelTime);
+		userSave[currentLevel].bestCharCount = Math.min(prevChar, c);
+		userSave[currentLevel].solutions[currentSolution].time = levelTime;
+		userSave[currentLevel].solutions[currentSolution].charCount = c;
+
+		levelScore = [
+			String(prevTime),
+			String(prevChar),
+			String(userSave[currentLevel].bestTime),
+			String(userSave[currentLevel].bestCharCount),
+			String(levelTime),
+			String(c),
+			prevTime > userSave[currentLevel].bestTime,
+			prevChar > userSave[currentLevel].bestCharCount
+		];
+	
+		saveUserData();
+
+		isRunning = false
+		executingLine = -1
+		autoRun = false
+		currentScene = 4;
+	}
+	else{
+		currentVersion += 1;
+		loadLevel(currentLevel, currentVersion, -2);
+	}
+
+	return true;
+}
+
+function getCodeCharCount(){
+	count = 0
+	for(let i = 0; i < codeText.length; i++){
+		count += codeText[i].split('/')[0].replace(' ', '').length;
+	}
+	return count;
+}
 
 
 // - - - - - - - - - - - - - - - -
@@ -1009,6 +1106,10 @@ function onUpdate(){
 		case 3: 
 			drawLevelScreen(); 
 			drawLevelExtraMenu();
+			break;
+		case 4: 
+			drawLevelScreen(); 
+			drawWinScreen();
 			break;
 	}
 }
@@ -1142,6 +1243,7 @@ function levelInput(key){
 				isRunning = false
 				executingLine = -1
 				autoRun = false
+				currentVersion = 0
 				loadLevel(currentLevel, currentVersion, -2) 
 				break;
 		}
@@ -1184,9 +1286,6 @@ function levelSelectInput(key){
 			levelDeleteKey = 0
 		}
 		switch(key){
-			case 100:
-			case 68:
-				break;
 			case 17: // up arrow
 				levelSolutionCursor = Math.max(0, levelSolutionCursor - 1);
 				break;
@@ -1252,12 +1351,23 @@ function extraMenuInput(key){
 	}
 }
 
+function winScreenInput(key){
+	if(extraMenuPage == 0){
+		switch(key){
+			case 27: // escape
+				currentScene = 1;
+				break;
+		}
+	}
+}
+
 function onInput(key){
 	switch(currentScene){
 		case 0: currentScene = 1; break;
 		case 1: levelSelectInput(key); break;
 		case 2: levelInput(key); break;
 		case 3: extraMenuInput(key); break;
+		case 4: winScreenInput(key); break;
 	}
 	
 }
