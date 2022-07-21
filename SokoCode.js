@@ -1,5 +1,7 @@
 let tick = 0;
 
+let gameVersion = '1.0'
+
 let cursorX, cursorY;
 let codeText;
 let codeWidthLimit = 15;
@@ -14,46 +16,55 @@ let goals = [];
 // max level size is 9 by 5 
 
 const ALL_LEVELS = {
-	'Test Level' : {
+/* Template for easy copy/pasting
+	'Intro To Boxes' : {
 		description : ' This is a test level',
-		versions : [	 // there can be multiple versions of the level that the player would need to account for
+		versions : [
 			{
-				grid : [ // the grid of boxes or walls
-					[1,0,0,0,1,6,5,3,4],
-					[0,1,0,0,0,3,2,1,4],
-					[0,1,0,0,0,0,0,0,2],
-					[0,0,0,0,0,0,0,0,7],
-					[0,1,1,1,0,0,0,0,0]
+				grid : [
+					[0,1,0,1,0,1,0],
 				],
-				goals : [ // 
-					[3,2], 
-					[5,2]
+				goals : [
+					[0,0], 
 				],
-				startPos : [3,3],
-				startDir : 1
+				startPos : [2,0],
+				startDir : 0
 			},
 		],
 		startCode : [
-			'/SOME TEST CODE',
-			'START:',
-			'ROT LEFT',
-			'PUL FORWARD',
-			'MOV LEFT',
-			'MID: ROT LEFT',
-			'CHK FORWARD',
-			'JMT START',
-			'MOV RIGHT',
-			'JMP MID',
-			'',
-			'/NOT MEANT TO',
-			'/DO ANYTHING',
-			'/IMPORTANT.',
-			'',
-			'/...YET'
+			''
 		]
 	},
-	'Second Test' : {
-		description : ' Just a second level to look at, this is also a test of a really long description just to show what it would potentially look like.',
+*/
+	'Intro To Boxes' : {
+		description : ' This is a test level',
+		versions : [ // there can be multiple versions of the level that the player would need to account for
+			{
+				grid : [ // the grid of boxes or walls
+					[0,1,0,1,0,1,0],
+				],
+				goals : [ // position of the goals in the level
+					[0,0], 
+					[3,0],
+					[6,0]
+				],
+				startPos : [2,0], // starting position of the robot
+				startDir : 0 // starting rotation of the robot
+			},
+		],
+		startCode : [
+			'MOV RIGHT',
+			'MOV RIGHT',
+			'',
+			'/LOOK AT MANUAL',
+			'/IN MENU FOR',
+			'/MORE INFO.',
+		]
+	},
+
+	//the player learns that their solution needs to fit multiple versions.
+	'That One Box' : {
+		description : ' Please nudge the box over by one space. Just keep in mind that the robot can start in different locations. Cycle between versions using (3).',
 		versions : [	 
 			{
 				grid : [
@@ -65,7 +76,19 @@ const ALL_LEVELS = {
 					[0,1]
 				],
 				startPos : [0,0],
-				startDir : 3,
+				startDir : 0,
+			},
+			{
+				grid : [
+					[0,0,0],
+					[0,1,0],
+					[0,0,0],
+				],
+				goals : [
+					[0,1]
+				],
+				startPos : [0,2],
+				startDir : 0,
 			},
 			{
 				grid : [
@@ -77,27 +100,233 @@ const ALL_LEVELS = {
 					[0,1]
 				],
 				startPos : [2,2],
-				startDir : 3,
+				startDir : 0,
+			},
+			{
+				grid : [
+					[0,0,0],
+					[0,1,0],
+					[0,0,0],
+				],
+				goals : [
+					[0,1]
+				],
+				startPos : [2,0],
+				startDir : 0,
 			},
 		],
 		startCode : [
-			'MOV UP',
-			'MOV UP',
-			'MOV RIGHT',
-			'MOV RIGHT',
-			'MOV DOWN',
-			'MOV LEFT'
+			''
 		]
-	}
+	},
+	'In A Row' : {
+		description : ' The first box is already in its place. The other boxes need to be the same distance away.',
+		versions : [
+			{
+				grid : [
+					[0,4,0,4,0,4,0],
+					[0,4,0,4,0,4,0],
+					[1,4,0,4,0,4,0],
+					[0,2,1,2,1,2,1],
+					[0,0,0,0,0,0,0],
+				],
+				goals : [
+					[0,2], 
+					[2,2], 
+					[4,2], 
+					[6,2]
+				],
+				startPos : [0,4],
+				startDir : 0
+			},
+			{
+				grid : [
+					[0,4,0,4,0,4,0],
+					[1,4,0,4,0,4,0],
+					[0,4,0,4,0,4,0],
+					[0,2,1,2,1,2,1],
+					[0,0,0,0,0,0,0],
+				],
+				goals : [
+					[0,1], 
+					[2,1], 
+					[4,1], 
+					[6,1]
+				],
+				startPos : [0,4],
+				startDir : 0
+			},
+			{
+				grid : [
+					[1,4,0,4,0,4,0],
+					[0,4,0,4,0,4,0],
+					[0,4,0,4,0,4,0],
+					[0,2,1,2,1,2,1],
+					[0,0,0,0,0,0,0],
+				],
+				goals : [
+					[0,0], 
+					[2,0], 
+					[4,0], 
+					[6,0]
+				],
+				startPos : [0,4],
+				startDir : 0
+			},
+		],
+		startCode : [
+			''
+		]
+	},
+	'James\'s Fault' : {
+		description : ' None of the boxes were place in the right spot.',
+		versions : [
+			{
+				grid : [
+					[0,1,0,1,0],
+					[0,1,0,1,0],
+					[0,1,0,1,0],
+					[0,1,0,1,0],
+				],
+				goals : [
+					[0,0], 
+					[0,1], 
+					[0,2], 
+					[0,3], 
+					[4,0],
+					[4,1],
+					[4,2],
+					[4,3]
+				],
+				startPos : [2,0],
+				startDir : 2
+			},
+			{
+				grid : [
+					[1,0,0,1,0],
+					[1,0,0,0,1],
+					[1,0,0,1,0],
+					[0,1,0,1,0],
+				],
+				goals : [
+					[1,0], 
+					[1,1], 
+					[1,2], 
+					[0,3], 
+					[4,0],
+					[3,1],
+					[4,2],
+					[4,3]
+				],
+				startPos : [2,0],
+				startDir : 2
+			},
+			{
+				grid : [
+					[0,1,0,0,1],
+					[1,0,0,1,0],
+					[0,1,0,1,0],
+					[1,0,0,0,1],
+				],
+				goals : [
+					[0,0], 
+					[1,1], 
+					[0,2], 
+					[1,3], 
+					[3,0],
+					[4,1],
+					[4,2],
+					[3,3]
+				],
+				startPos : [2,0],
+				startDir : 2
+			},
+		],
+		startCode : [
+			''
+		]
+	},
+	'Clear Paperwork' : {
+		description : ' Unfortunately, we don\'t know where the boxes need to be placed this time, but we\'re sure you\'ll figure it out and get it done in no time!',
+		versions : [
+			{
+				grid : [
+					[0,0,0,0,0],
+					[1,1,1,1,1],
+					[0,0,0,0,0],
+				],
+				goals : [
+					[0,1], 
+					[1,0], 
+					[2,0], 
+					[3,0], 
+					[4,1], 
+				],
+				startPos : [0,2],
+				startDir : 1
+			},
+			{
+				grid : [
+					[0,0,0,0,0],
+					[1,1,1,1,1],
+					[0,0,0,0,0],
+				],
+				goals : [
+					[0,0], 
+					[1,1], 
+					[2,1], 
+					[3,0], 
+					[4,1], 
+				],
+				startPos : [0,2],
+				startDir : 1
+			},
+			{
+				grid : [
+					[0,0,0,0,0],
+					[1,1,1,1,1],
+					[0,0,0,0,0],
+				],
+				goals : [
+					[0,0], 
+					[1,1], 
+					[2,0], 
+					[3,1], 
+					[4,0], 
+				],
+				startPos : [0,2],
+				startDir : 1
+			},
+			{
+				grid : [
+					[0,0,0,0,0],
+					[1,1,1,1,1],
+					[0,0,0,0,0],
+				],
+				goals : [
+					[0,0], 
+					[1,0], 
+					[2,1], 
+					[3,1], 
+					[4,1], 
+				],
+				startPos : [0,2],
+				startDir : 1
+			},
+		],
+		startCode : [
+			''
+		]
+	},
 };
 
 /*
 	puzzle ideas
 	
-	single row, teach push and pull (tutorial)
-	using rotation to count (counting)
-	two rows of boxes (repetition)
-	row of boxes that have to either be on the top or middle row
+	(done) single row, teach push and pull (tutorial)
+	(done) using rotation to count (counting)
+	(kinda done) two rows of boxes (repetition)
+	(done) row of boxes that have to either be on the top or middle row
 		(this could include randomized solutions)
 
 */
@@ -169,20 +398,26 @@ const extraMenuOptions = ['View Manual', 'Return to Level Select']
 let gameManual = [
 // done like this since I want it formatted in a very specific way
 //                                             | \(text limit, inclusive)
-'  The Goal of each level is to place a box on    \
-each target. Write instructions in the editor    \
-and watch your robot go!                         '
+' In each assignment, you will need to use the    \
+robot to move all of the boxes in their          \
+requested position.                              \
+                                                 \
+ It doesn\'t matter if the robot is in the       \
+middle of instructions, once all of the boxes    \
+are in place, the robot will automatically.      \
+shut off'
 ,
 ' < Scoring >                                     \
                                                  \
-Each level is scored in two ways.                \
+ Your performance in each assignment is scored   \
+in two different ways.                           \
                                                  \
-First, by how many characters you used in your   \
+ First, by how many characters you used in your  \
 code. Whitespace and comments do not count       \
 towards this amount. (Make comments using "/")   \
                                                  \
-Second, by how many steps it takes to complete   \
-the level.'
+ Second, by how many steps it takes to complete  \
+the assignment.'
 ,
 ' < [dir] Words >                                 \
                                                  \
@@ -583,6 +818,12 @@ function drawLevel(){
 		}
 	}
 
+	for(let i = 0; i < goals.length; i++){
+		if (level[goals[i][1]][goals[i][0]] == 1){
+			drawBoxBottom(16, goals[i][0]*4 + sx, goals[i][1]*3 + sy, 3, 2, 0);
+		}
+	}
+
 	if(robotTrapped)
 		drawRobotTop(12, robotX * 4 + sx + 1, robotY * 3 + sy + 1, robotDir);
 	else
@@ -638,7 +879,7 @@ function drawTitleScreen(){
 		cRow = titleCubes[r];
 		for(let x = (Math.floor(tick / cRow.speed + 28) % cRow.spacing) - cRow.spacing; x < 56; x += cRow.spacing){
 			for(let i = 0; i < cRow.text.length; i++){
-				drawText(cRow.text[i], cRow.colors[i], x + cRow.offsets[i], i + cRow.yStart)
+				drawText(cRow.text[i], cRow.colors[i] + Math.min(1 - i, 0), x + cRow.offsets[i], i + cRow.yStart)
 			}
 		}
 	}
@@ -669,8 +910,9 @@ function drawTitleScreen(){
 	drawText('█', 4, 35, 5)
 	drawText('██', 0, 33, 5)
 
-	drawText('By Werxzy', 8, 46,19)
-	drawText('Press Any Key To Continue', 17, 1,19)
+	drawText('Ver. ' + gameVersion, 8, 32, 19)
+	drawText('By Werxzy', 8, 46, 19)
+	drawText('Press Any Key To Continue', 17, 1, 19)
 }
 
 function drawLevelInfo(){
@@ -1008,7 +1250,7 @@ const keywords ={
 	'SET': [2, 'bool'],
 	'JMP': [3, 'label'],
 	'JMT': [4, 'label'],
-	'JMF': [5, 'dir'],
+	'JMF': [5, 'label'],
 	'MOV': [6, 'dir'],
 	'PUL': [7, 'dir'],
 	'FCE': [8, 'dir'],
@@ -1160,7 +1402,7 @@ function codeStep(){
 
 		case 1: // CHF
 			d = compiledCode[executingLine++][1];
-			robotState = robotFacing == d || d == 5;
+			robotState = robotDir == d || d == 5;
 			break;
 
 		case 2: // SET
@@ -1394,8 +1636,9 @@ function levelInput(key){
 			case 1: // run
 				startRun()
 				if(isCompiled){
+					if(!autoRun)
+						autoRunDelay = 0;
 					autoRun = true
-					autoRunDelay = 0
 				}
 				break;
 
