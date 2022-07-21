@@ -1,5 +1,4 @@
-let lastKey;
-let keyBuffer;
+let tick = 0;
 
 let cursorX, cursorY;
 let codeText;
@@ -228,6 +227,124 @@ JMP [label] - Jumps to label.                    \
 JMT [label] - Jumps to label if state is TRUE.   \
                                                  \
 JMF [label] - Jumps to label if state is FALSE.  '
+];
+
+const titleLetters = [
+	[
+	'▛▀▀▜',
+	'▌▗▄▟',
+	'▌▝▀▜',
+	'▙▄▖▐',
+	'▛▀▘▐',
+	'▙▄▄▟'
+	],
+	[
+	'▛▀▀▜',
+	'▌▗▖▐',
+	'▌▐▌▐',
+	'▌▐▌▐',
+	'▌▝▘▐',
+	'▙▄▄▟'
+	],
+	[
+	'▛▜▛▜',
+	'▌▐▌▐',
+	'▌▝ ▟',
+	'▌▗ ▜',
+	'▌▐▌▐',
+	'▙▟▙▟'
+	],
+	[
+	'▛▀▀▜',
+	'▌▗▄▟',
+	'▌▐██',
+	'▌▐██',
+	'▌▝▀▜',
+	'▙▄▄▟'
+	],
+	[
+	'▛▀▜█',
+	'▌▗▝▜',
+	'▌▐▌▐',
+	'▌▐▌▐',
+	'▌▝▗▟',
+	'▙▄▟█'
+	],
+	[
+	'▛▀▀▜',
+	'▌▗▄▟',
+	'▌▝▀▜',
+	'▌▗▄▟',
+	'▌▝▀▜',
+	'▙▄▄▟'
+	],
+	
+];
+
+const titleCubes = [
+	{
+		text:[
+			'▖▗ ',
+			'▘▝ '
+		],
+		colors:[5, 2 ],
+		offsets:[0, 0],
+		spacing: 3,
+		yStart: 6,
+		speed: -160
+	},
+	{
+		text:[
+			'▟▛',
+			'█▌ '
+		],
+		colors:[7, 3],
+		offsets:[0, 0],
+		spacing: 3,
+		yStart: 7,
+		speed: 80
+	},
+	{
+		text:[
+			'▟█▛',
+			'██▌ ',
+			'██▌ '
+		],
+		colors:[8, 4, 4],
+		offsets:[0, 0, 0],
+		spacing: 5,
+		yStart: 8,
+		speed: 48
+	},
+	{
+		text:[
+			'▟████▛',
+			'█████▌ ',
+			'█████▌ ',
+			'█████▌ '
+		],
+		colors:[9, 5, 5, 5],
+		offsets:[0, 0, 0, 0],
+		spacing: 8,
+		yStart: 10,
+		speed: 30
+	},
+	{
+		text:[
+			'▟██████▛',
+			'▟██████▛ ',
+			'███████▌  ',
+			'███████▌  ',
+			'███████▌  ',
+			'███████▌  '
+		],
+		colors:[10, 10, 6, 6, 6, 6],
+		offsets:[1, 0, 0, 0, 0, 0],
+		spacing: 12,
+		yStart: 12,
+		speed: 20
+	}
+
 ];
 
 let userSave;
@@ -515,10 +632,45 @@ function drawMainBoxes(){
 }
 
 function drawTitleScreen(){
-	drawText('Soko Code', 13, 3,3)
-	drawText('By Werxzy', 13, 3,4)
-	drawText('Press Any Key', 13, 3,4)
-	// drawTextWrapped(loadData(), 13, 1,6, 50) // just to read user data for testing
+	tick += 1.5
+
+	for(let r = 0; r < titleCubes.length; r++){
+		cRow = titleCubes[r];
+		for(let x = (Math.floor(tick / cRow.speed + 28) % cRow.spacing) - cRow.spacing; x < 56; x += cRow.spacing){
+			for(let i = 0; i < cRow.text.length; i++){
+				drawText(cRow.text[i], cRow.colors[i], x + cRow.offsets[i], i + cRow.yStart)
+			}
+		}
+	}
+	title = [0,1,2,1,3,1,4,5]
+
+	for(let i = 0; i < title.length; i++){
+		l = title[i]
+		for(let j = 0; j < titleLetters[l].length; j++){
+			drawText(titleLetters[l][j], Math.min(5 + j + i * 0.7, 12), i * 4, j);
+		}
+	}
+	for(let y = 0; y < 6; y++){
+		let c = y == 6 ? '▀' : '█'
+		let yy = y - 5.5
+		yy *= yy * 2
+		for(let x = 32; x < 56; x++){
+			let xx = x - 45
+			let color = Math.min(22 - Math.sqrt(xx * xx + yy) * 0.75, 17)
+			drawText(c, color, x, y);
+		}
+	}
+	drawTextWrapped('█ █', 4, 50, 4, 1)
+	drawTextWrapped('██ ██', 0, 51, 4, 2)
+
+	drawText('█', 4, 54, 5)
+	drawText('██', 0, 55, 5)
+
+	drawText('█', 4, 35, 5)
+	drawText('██', 0, 33, 5)
+
+	drawText('By Werxzy', 8, 46,19)
+	drawText('Press Any Key To Continue', 17, 1,19)
 }
 
 function drawLevelInfo(){
