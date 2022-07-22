@@ -36,6 +36,7 @@ const ALL_LEVELS = {
 		]
 	},
 */
+	// probably first level, introducing mov and pul
 	'Intro To Boxes' : {
 		description : ' This is a test level',
 		versions : [ // there can be multiple versions of the level that the player would need to account for
@@ -53,7 +54,7 @@ const ALL_LEVELS = {
 			},
 		],
 		startCode : [
-			'MOV RIGHT',
+			'MOV LEFT',
 			'MOV RIGHT',
 			'',
 			'/LOOK AT MANUAL',
@@ -434,7 +435,7 @@ const ALL_LEVELS = {
 			{
 				grid : [
 					[1,1,1,1,1],
-					[1,1,0,1,0],
+					[1,1,0,0,1],
 					[1,1,0,0,0],
 					[0,0,0,0,0],
 					[1,1,1,1,1],
@@ -453,7 +454,7 @@ const ALL_LEVELS = {
 			{
 				grid : [
 					[1,1,1,1,1,1],
-					[1,0,1,1,0,0],
+					[1,0,1,0,0,1],
 					[1,1,1,0,0,0],
 					[0,0,0,0,0,0],
 					[1,1,1,1,1,1],
@@ -473,7 +474,7 @@ const ALL_LEVELS = {
 			{
 				grid : [
 					[1,1,1,1,1,1,1,1,1],
-					[1,0,0,1,1,0,0,1,0],
+					[1,0,0,1,1,0,0,0,1],
 					[1,1,1,1,1,0,0,0,0],
 					[0,0,0,0,0,0,0,0,0],
 					[1,1,1,1,1,1,1,1,1],
@@ -497,6 +498,148 @@ const ALL_LEVELS = {
 			''
 		]
 	},
+	'Double Click' : {
+		description : ' All of the boxes need to be moved over twice.  Be careful not to push them too far or else you may damage the goods.',
+		versions : [
+			{
+				grid : [
+					[7,7,7,7,0,0,1,0,1],
+					[7,7,0,0,1,0,0,0,1],
+					[7,7,7,0,0,1,0,0,1],
+					[0,0,1,0,0,0,0,0,1],
+					[7,7,7,0,0,1,0,0,1],
+				],
+				goals : [
+					[4,0], 
+					[2,1], 
+					[3,2], 
+					[0,3], 
+					[3,4], 
+				],
+				startPos : [7,0],
+				startDir : 3
+			},
+			{
+				grid : [
+					[0,0,1,0,0,0,0,0,1],
+					[7,7,0,0,1,0,0,0,1],
+					[7,7,7,7,0,0,1,0,1],
+					[7,0,0,1,0,0,0,0,1],
+					[7,0,0,1,0,0,0,0,1],
+				],
+				goals : [
+					[0,0], 
+					[2,1], 
+					[4,2], 
+					[1,3], 
+					[1,4], 
+				],
+				startPos : [7,0],
+				startDir : 3
+			},
+		],
+		startCode : [
+			''
+		]
+	},
+
+	// this one can be VERY difficult with the current line limitations
+	'Second Row' : {
+		description : ' The boxes were not aligned correctly during their original shipment. It is vital that this warehouse has as much symmetry as possible.',
+		versions : [
+			{
+				grid : [
+					[0,0,0,0],
+					[0,0,0,0],
+					[1,1,1,1],
+					[0,0,0,0],
+					[1,1,1,1],
+				],
+				goals : [
+					[0,1], [1,1], [2,1], [3,1], 
+					[0,3], [1,3], [2,3], [3,3], 
+				],
+				startPos : [0,1],
+				startDir : 3
+			},
+		],
+		startCode : [
+			''
+		]
+	},
+
+	// need to test
+	'Walled Off' : {
+		description : ' ',
+		versions : [
+			{
+				grid : [
+					[0,0,0,4,0],
+					[0,0,0,2,0],
+					[0,0,0,1,0],
+					[0,0,0,4,1],
+					[0,0,0,2,0],
+				],
+				goals : [
+					[3,2],
+					[4,4],
+				],
+				startPos : [0,4],
+				startDir : 0
+			},
+			{
+				grid : [
+					[0,0,0,4,0,0,0,2,0],
+					[0,0,0,4,0,0,0,1,0],
+					[0,0,0,2,0,0,0,4,0],
+					[0,0,0,1,0,0,0,4,1],
+					[0,0,0,2,0,0,0,2,0],
+				],
+				goals : [
+					[3,3],
+					[7,1],
+					[8,4],
+				],
+				startPos : [0,4],
+				startDir : 0
+			},
+			{
+				grid : [
+					[0,0,0,2,0,0,0,4,0],
+					[0,0,0,1,0,0,0,2,0],
+					[0,0,0,4,0,0,0,1,0],
+					[0,0,0,4,0,0,0,4,1],
+					[0,0,0,2,0,0,0,2,0],
+				],
+				goals : [
+					[3,1],
+					[7,2],
+					[8,4],
+				],
+				startPos : [0,4],
+				startDir : 0
+			},
+			{
+				grid : [
+					[0,0,0,1,0,0,0,1,0],
+					[0,0,0,4,0,0,0,4,0],
+					[0,0,0,4,0,0,0,4,0],
+					[0,0,0,4,0,0,0,4,1],
+					[0,0,0,2,0,0,0,2,0],
+				],
+				goals : [
+					[3,0],
+					[7,0],
+					[8,4],
+				],
+				startPos : [0,4],
+				startDir : 0
+			},
+		],
+		startCode : [
+			''
+		]
+	},
 };
 
 /*
@@ -508,8 +651,10 @@ const ALL_LEVELS = {
 	(done) row of boxes that have to either be on the top or middle row
 		(this could include randomized solutions)
 
-	push blocks down a hallway to fill a gap
-	pull block from the left to fill unoccupied rows
+	(done) push blocks down a hallway to fill a gap
+	(done) pull block from the left to fill unoccupied rows
+
+	counting boxes
 */
 
 const solids = [
@@ -579,7 +724,7 @@ let levelDeleteKey;
 
 let extraMenuCursor;
 let extraMenuPage;
-const extraMenuOptions = ['View Manual', 'Return to Level Select', 'Credits']
+const extraMenuOptions = ['Close Menu', 'View Manual', 'Credits', 'Exit Level']
 let gameManual = [
 // done like this since I want it formatted in a very specific way
 //                                             | \(text limit, inclusive)
@@ -653,7 +798,9 @@ const creditsPage =
 'Soko Code by Werxzy                              \
                                                  \
 Source and updates can be found at:              \
-  github.com/Werxzy/SokoCode                     ';
+ github.com/Werxzy/SokoCode                      \
+                                                 \
+Version ' + gameVersion;
 
 const titleLetters = [
 	[
@@ -1265,6 +1412,7 @@ function drawLevelExtraMenu(){
 			drawText(extraMenuOptions[i], extraMenuCursor == i ? 17 : 10, 4, 4 + i * 2)
 		}
 		drawText('>', 17, 3, 4 + extraMenuCursor * 2)
+		drawText('(Enter) Select', 10, 17, 19)
 	}
 	else if(extraMenuPage == 1){
 		drawTextWrapped(gameManual[extraMenuCursor], 10, 4, 4, 48)
@@ -1932,7 +2080,7 @@ function levelSelectInput(key){
 }
 
 function extraMenuInput(key){
-	if(extraMenuPage == 0){
+	if(extraMenuPage == 0){ // menu options
 		switch(key){
 			case 17: // up arrow
 				extraMenuCursor = Math.max(0, extraMenuCursor - 1);
@@ -1941,17 +2089,20 @@ function extraMenuInput(key){
 				extraMenuCursor = Math.min(extraMenuOptions.length - 1, extraMenuCursor + 1);
 				break;
 			case 10: // enter key
-				if (extraMenuCursor == 0){
+				if (extraMenuCursor == 0){ // close menu
+					currentScene = 2;
+				}
+				if (extraMenuCursor == 1){ // view manual
 					extraMenuPage = 1;
 					extraMenuCursor = 0;
 				}
-				else if (extraMenuCursor == 1){
+				else if (extraMenuCursor == 2){ // credits
+					extraMenuPage = 2;
+				}
+				else if (extraMenuCursor == 3){ // exit level
 					saveUserData()
 					currentScene = 1
 					extraMenuCursor = 0
-				}
-				else if (extraMenuCursor == 2){
-					extraMenuPage = 2;
 				}
 				break;
 			case 27: // escape
@@ -1959,7 +2110,7 @@ function extraMenuInput(key){
 				break;
 		}
 	}
-	else if(extraMenuPage == 1){
+	else if(extraMenuPage == 1){ // manual
 		switch(key){
 			case 19: // left arrow
 				extraMenuCursor = Math.max(0, extraMenuCursor - 1);
@@ -1969,11 +2120,11 @@ function extraMenuInput(key){
 				break;
 			case 27: // escape
 				extraMenuPage = 0;
-				extraMenuCursor = 0;
+				extraMenuCursor = 1;
 				break;
 		}
 	}
-	else if(extraMenuPage == 2){
+	else if(extraMenuPage == 2){ // credits
 		switch(key){
 			case 27: // escape
 				extraMenuPage = 0;
