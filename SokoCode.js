@@ -179,28 +179,8 @@ const ALL_LEVELS = {
 		]
 	},
 	'James\'s Fault' : {
-		description : ' None of the boxes were place in the right spot.',
+		description : ' None of the boxes were place in the right spot.                                                      If James asks where his keys went, tell him they\'re          in warehouse 404.',
 		versions : [
-			{
-				grid : [
-					[0,1,0,1,0],
-					[0,1,0,1,0],
-					[0,1,0,1,0],
-					[0,1,0,1,0],
-				],
-				goals : [
-					[0,0], 
-					[0,1], 
-					[0,2], 
-					[0,3], 
-					[4,0],
-					[4,1],
-					[4,2],
-					[4,3]
-				],
-				startPos : [2,0],
-				startDir : 2
-			},
 			{
 				grid : [
 					[1,0,0,1,0],
@@ -215,6 +195,26 @@ const ALL_LEVELS = {
 					[0,3], 
 					[4,0],
 					[3,1],
+					[4,2],
+					[4,3]
+				],
+				startPos : [2,0],
+				startDir : 2
+			},
+			{
+				grid : [
+					[0,1,0,1,0],
+					[0,1,0,1,0],
+					[0,1,0,1,0],
+					[0,1,0,1,0],
+				],
+				goals : [
+					[0,0], 
+					[0,1], 
+					[0,2], 
+					[0,3], 
+					[4,0],
+					[4,1],
 					[4,2],
 					[4,3]
 				],
@@ -318,6 +318,185 @@ const ALL_LEVELS = {
 			''
 		]
 	},
+	'Perilous Push' : {
+		description : ' Corners were cut when we ordered this warehouse to be built.  Please don\'t break our robot or get it stuck, we\'re already behind schedule.',
+		versions : [
+			{
+				grid : [
+					[6,4,0,7,0,6,4],
+					[3,2,1,7,1,3,2],
+					[7,7,0,0,0,1,0],
+					[0,1,0,7,0,1,0],
+					[7,7,0,0,0,7,7],
+				],
+				goals : [
+					[0,3], 
+					[2,0], 
+					[4,0], 
+					[6,2], 
+					[6,3], 
+				],
+				startPos : [2,4],
+				startDir : 1
+			},
+			{
+				grid : [
+					[6,4,0,0,7,6,4],
+					[3,2,1,1,7,3,2],
+					[7,7,0,0,0,1,0],
+					[7,7,0,7,0,7,7],
+					[0,1,0,0,0,1,0],
+				],
+				goals : [
+					[0,4], 
+					[2,0], 
+					[3,0], 
+					[6,2], 
+					[6,4],
+				],
+				startPos : [2,4],
+				startDir : 1
+			},
+			{
+				grid : [
+					[6,4,0,0,0,6,4],
+					[3,2,1,1,1,3,2],
+					[0,1,0,0,0,1,0],
+					[0,1,0,7,0,1,0],
+					[0,1,0,0,0,1,0],
+				],
+				goals : [
+					[0,2], 
+					[0,3], 
+					[0,4], 
+					[2,0], 
+					[3,0], 
+					[4,0], 
+					[6,2], 
+					[6,3], 
+					[6,4], 
+				],
+				startPos : [2,4],
+				startDir : 1
+			},
+		],
+		startCode : [
+			''
+		]
+	},
+	'Mind The Gap' : {
+		description : ' We currently have an excess of boxes, so it\'s fine to use them however you want to get the job done.',
+		versions : [
+			{
+				grid : [
+					[0,1,0,3,2],
+					[0,0,7,1,0],
+					[0,0,0,3,2],
+				],
+				goals : [
+					[4,1], 
+				],
+				startPos : [0,1],
+				startDir : 0
+			},
+			{
+				grid : [
+					[0,0,0,1,0,3,2],
+					[0,0,7,0,7,0,0],
+					[0,1,1,0,0,3,2],
+				],
+				goals : [
+					[6,1], 
+				],
+				startPos : [0,1],
+				startDir : 0
+			},
+			{
+				grid : [
+					[0,1,0,1,1,0,1,3,2],
+					[0,0,0,7,7,7,7,7,0],
+					[0,0,1,0,0,1,0,3,2],
+				],
+				goals : [
+					[8,1], 
+				],
+				startPos : [0,1],
+				startDir : 0
+			},
+		],
+		startCode : [
+			''
+		]
+	},
+	'Perfect Packing' : {
+		description : ' We got a new shipment of boxes and the warehouse is already pretty full.  Make sure not to waste any space.',
+		versions : [
+			{
+				grid : [
+					[1,1,1,1,1],
+					[1,1,0,1,0],
+					[1,1,0,0,0],
+					[0,0,0,0,0],
+					[1,1,1,1,1],
+				],
+				goals : [
+					[0,0], [0,1], [0,4],
+					[1,0], [1,1], [1,4],
+					[2,0], [2,1], [2,4],
+					[3,0], [3,1], [3,4],
+					[4,0], [4,1], [4,4],
+
+				],
+				startPos : [2,2],
+				startDir : 0
+			},
+			{
+				grid : [
+					[1,1,1,1,1,1],
+					[1,0,1,1,0,0],
+					[1,1,1,0,0,0],
+					[0,0,0,0,0,0],
+					[1,1,1,1,1,1],
+				],
+				goals : [
+					[0,0], [0,1], [0,4],
+					[1,0], [1,1], [1,4],
+					[2,0], [2,1], [2,4],
+					[3,0], [3,1], [3,4],
+					[4,0], [4,1], [4,4],
+					[5,0], [5,1], [5,4],
+
+				],
+				startPos : [3,2],
+				startDir : 0
+			},
+			{
+				grid : [
+					[1,1,1,1,1,1,1,1,1],
+					[1,0,0,1,1,0,0,1,0],
+					[1,1,1,1,1,0,0,0,0],
+					[0,0,0,0,0,0,0,0,0],
+					[1,1,1,1,1,1,1,1,1],
+				],
+				goals : [
+					[0,0], [0,1], [0,4],
+					[1,0], [1,1], [1,4],
+					[2,0], [2,1], [2,4],
+					[3,0], [3,1], [3,4],
+					[4,0], [4,1], [4,4],
+					[5,0], [5,1], [5,4],
+					[6,0], [6,1], [6,4],
+					[7,0], [7,1], [7,4],
+					[8,0], [8,1], [8,4],
+				],
+				startPos : [5,2],
+				startDir : 0
+			},
+		],
+		startCode : [
+			''
+		]
+	},
 };
 
 /*
@@ -329,6 +508,8 @@ const ALL_LEVELS = {
 	(done) row of boxes that have to either be on the top or middle row
 		(this could include randomized solutions)
 
+	push blocks down a hallway to fill a gap
+	pull block from the left to fill unoccupied rows
 */
 
 const solids = [
@@ -365,6 +546,7 @@ const emptyish = [
 	4 = wall extend down
 	5 = wall extend right and down
 	6 = wall extend right, down, and corner
+	7 = hole
 
 */
 
@@ -377,6 +559,9 @@ let isRunning;
 let autoRun;
 let autoRunDelay;
 let levelTime;
+let testingSpeed;
+const baseTestingSpeed = 15;
+const fastestTestingSpeed = 4;
 
 let levelScore;
 let prevBestChar;
@@ -394,7 +579,7 @@ let levelDeleteKey;
 
 let extraMenuCursor;
 let extraMenuPage;
-const extraMenuOptions = ['View Manual', 'Return to Level Select']
+const extraMenuOptions = ['View Manual', 'Return to Level Select', 'Credits']
 let gameManual = [
 // done like this since I want it formatted in a very specific way
 //                                             | \(text limit, inclusive)
@@ -463,6 +648,12 @@ JMT [label] - Jumps to label if state is TRUE.   \
                                                  \
 JMF [label] - Jumps to label if state is FALSE.  '
 ];
+
+const creditsPage = 
+'Soko Code by Werxzy                              \
+                                                 \
+Source and updates can be found at:              \
+  github.com/Werxzy/SokoCode                     ';
 
 const titleLetters = [
 	[
@@ -696,6 +887,7 @@ function onConnect()
 	autoRun = false;
 	autoRunDelay = 0;
 	levelTime = 0;
+	testingSpeed = baseTestingSpeed;
 
 	currentScene = 0;
 	currentLevel = 0;
@@ -788,12 +980,13 @@ function drawLevel(){
 	drawBox(3, sx-1, sy-1, level[0].length * 4 + 2, level.length * 3 + 2);
 
 	for(let i = 0; i < goals.length; i++){
+		// cool, but might be confused for something other than a target.
+		// drawTextWrapped('▛▲▜ ▙▼▟', 8, goals[i][0] * 4 + sx + 1, goals[i][1] * 3 + sy + 1, 3);
 		drawBox(8, goals[i][0] * 4 + sx + 1, goals[i][1] * 3 + sy + 1, 3, 2);
 	}
 
 	for(let i = 0; i < filledHoles.length; i++){
-		p = filledHoles[i]
-		drawBoxTop(6, p[0]*4 + sx + 1, p[1]*3 + sy + 1, 3, 2); break;
+		drawBoxTop(6, filledHoles[i][0]*4 + sx + 1, filledHoles[i][1]*3 + sy + 1, 3, 2);
 	}
 
 	//draws the bottom components of the level
@@ -994,7 +1187,7 @@ function drawLevelSelection(){
 
 function drawLevelScreen(){
 	if(isRunning && autoRun && currentScene == 2){
-		if(autoRunDelay++ >= 15){
+		if(autoRunDelay++ >= testingSpeed){
 			codeStep()
 			autoRunDelay = 0
 		}
@@ -1040,7 +1233,7 @@ function drawLevelScreen(){
 	
 	if(currentScene == 2){
 		if(isRunning){
-			drawText('(1) Run (2) Step (3) Stop  ', 10, 17, 19);
+			drawText('(1) Faster (2) Step (3) Stop  ', 10, 17, 19);
 
 			statusText = 'Time:     State:' + (robotTrapped ? 'STUCK' : robotState ? ' TRUE' : 'FALSE');
 			
@@ -1078,6 +1271,9 @@ function drawLevelExtraMenu(){
 		drawText('(Arrow Keys) Turn Page', 10, 17,19)
 		p = ' ' + (extraMenuCursor + 1) + '/' + (gameManual.length) + ' '
 		drawText(p, 10, 52-p.length, 17)
+	}
+	else if(extraMenuPage == 2){
+		drawTextWrapped(creditsPage, 10, 4, 4, 48)
 	}
 	
 	drawText('(ESC) Back', 10, 45, 19)
@@ -1627,6 +1823,7 @@ function startRun(){
 		executingLine = 0
 		levelTime = 0
 		testingVersion = currentVersion
+		testingSpeed = baseTestingSpeed
 	}
 }
 
@@ -1634,17 +1831,21 @@ function levelInput(key){
 	if(key >= 48 && key < 58){ // keys 0 to 9
 		switch(key - 48){
 			case 1: // run
+				if(isRunning){
+					testingSpeed = Math.max(testingSpeed - 2, fastestTestingSpeed);
+				}
 				startRun()
 				if(isCompiled){
 					if(!autoRun)
 						autoRunDelay = 0;
-					autoRun = true
+					autoRun = true;
 				}
 				break;
 
 			case 2: // step
 				startRun()
 				if(isCompiled){
+					testingSpeed = baseTestingSpeed
 					autoRun = false
 					autoRunDelay = 0
 					codeStep()
@@ -1656,7 +1857,7 @@ function levelInput(key){
 					isRunning = false
 					executingLine = -1
 					autoRun = false
-					currentVersion = 0
+					currentVersion = testingVersion
 					loadLevel(currentLevel, currentVersion, -2) 
 				}
 				else{
@@ -1747,6 +1948,10 @@ function extraMenuInput(key){
 				else if (extraMenuCursor == 1){
 					saveUserData()
 					currentScene = 1
+					extraMenuCursor = 0
+				}
+				else if (extraMenuCursor == 2){
+					extraMenuPage = 2;
 				}
 				break;
 			case 27: // escape
@@ -1765,6 +1970,14 @@ function extraMenuInput(key){
 			case 27: // escape
 				extraMenuPage = 0;
 				extraMenuCursor = 0;
+				break;
+		}
+	}
+	else if(extraMenuPage == 2){
+		switch(key){
+			case 27: // escape
+				extraMenuPage = 0;
+				extraMenuCursor = 2;
 				break;
 		}
 	}
