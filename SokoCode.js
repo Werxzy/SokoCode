@@ -15,6 +15,35 @@ let filledHoles = []; // just for looks, shouldn't cause any puzzle interaction
 let goals = [];
 // max level size is 9 by 5 
 
+//[key, isLevel, win requirements]
+const LEVEL_ORDER = [
+	['Greetings!', false, 0],
+
+	// somewhat sorted by guessed difficulty
+
+	['Intro To Boxes', true, 0],	// 0
+	['That One Box', true, 1],		// 1
+	['Out Of Place', true, 1],		// 1
+	['North?', true, 2],			// 2
+	['James\'s Fault', true, 3],	// 2
+	['Perilous Push', true, 4],		// 3
+	['Mind The Gap', true, 5],		// 3
+	['Perfect Packing', true, 6],	// 3
+	['Double Click', true, 7],		// 3
+	['One Sided', true, 8],			// 3
+	['Walled Off', true, 9],		// 4
+	['Second Row', true, 10],		// 5
+	['Clear Paperwork', true, 11],	// 5
+
+	['Goodbye...', false, 12],
+]
+
+// oops all spaces
+const MESSAGES = {
+	'Greetings!' : ' Welcome to the team! We\'re glad you too saw potential for the box to be the end-all be-all product of the future, and begin your internship with us here at BOXTOPIA.™ Where the future is "Thinking inside the box"! And just as a reminder, the role you have signed up for is an UNPAID internship.                                                          If you have any questions, please contact James.',
+	'Goodbye...' : ' Sorry, but we\'re having to let go all staff due to low profits. It turns out boxes were not the next big trend we thought it would be. You may finish any work you have left.                                                       Good luck on all of your future endevors. '
+}
+
 const ALL_LEVELS = {
 /* Template for easy copy/pasting
 	'Intro To Boxes' : {
@@ -778,6 +807,94 @@ const ALL_LEVELS = {
 			''
 		]
 	},
+
+	'One Sided' : {
+		description : ' I keep forgetting which side the boxes are suppose to be stored in. Please move the boxes this while I figure this out.',
+		versions : [
+			/*  Sadly, I don't think this version is possible with the current limitations
+			{
+				grid : [
+					[1,1,0,0,0],
+					[1,1,0,0,0],
+				],
+				goals : [
+					[3,0], [4,0], 
+					[3,1], [4,1], 
+				],
+				startPos : [2,0],
+				startDir : 3
+			},
+			*/
+			// slightly different version from the one below, but I'm not sure if it's possible
+			/*
+			{
+				grid : [
+					[1,0,0,0],
+					[1,0,0,0],
+					[1,0,0,0],
+					[1,0,0,0],
+					[3,3,3,2],
+				],
+				goals : [
+					[3,0], 
+					[3,1], 
+					[3,2], 
+					[3,3],
+				],
+				startPos : [1,0],
+				startDir : 3
+			},
+			*/
+			
+			
+			{
+				grid : [
+					[1,0,0,0],
+					[1,0,0,0],
+					[1,0,0,0],
+					[1,0,0,0],
+					[0,0,0,0],
+				],
+				goals : [
+					[3,0], 
+					[3,1], 
+					[3,2], 
+					[3,3],
+				],
+				startPos : [1,0],
+				startDir : 3
+			},
+			
+		],
+		startCode : [
+			''
+		]
+	},
+
+	/* this one just required too many instructions to even put one block in place
+	'Next Aisle' : {
+		description : ' This is a test level',
+		versions : [
+			{
+				grid : [
+					[0,0,0,0,0,0,1],
+					[3,3,3,2,0,0,1],
+					[1,1,1,0,0,0,1],
+				],
+				goals : [
+					[0,0], 
+					[1,0], 
+					[2,0], 
+				],
+				startPos : [3,2],
+				startDir : 0
+			},
+		],
+		startCode : [
+			''
+		]
+	},
+	 */
 };
 
 /*
@@ -854,6 +971,8 @@ let currentLevel;
 let currentVersion;
 let testingVersion;
 let currentSolution;
+
+let levelsDone;
 
 let levelCursor;
 let levelSolutionCursor;
@@ -1060,10 +1179,9 @@ const titleCubes = [
 
 let userSave;
 /*
-	loaded state
-
+	save data format
 	[
-		{
+		levelname : {
 			bestTime: 25, 
 			bestCharCount: 50,
 			solutions: [
@@ -1080,14 +1198,6 @@ let userSave;
 		},
 		... (one per level)
 	]
-
-	string state
-
-	bestTime~bestCharCount~time_charCount_code_code_code~time_charCount_code_...=...| ...
-	| seperates level data
-	~ seperates bests and each solution
-	_ seperates level time, charcount, and each line of code
-
 
 /*
 	instructions
@@ -1187,6 +1297,8 @@ function onConnect()
 
 	extraMenuCursor = 0;
 	extraMenuPage = 0;
+
+	levelsDone = calculateLevelsDone()
 }
 
 // - - - - Drawing Functions - - - -
@@ -1394,70 +1506,82 @@ function drawTitleScreen(){
 }
 
 function drawLevelInfo(){
-	levelName = Object.keys(ALL_LEVELS)[levelCursor]
+	option = LEVEL_ORDER[levelCursor]
+	levelName = option[0]
 	nameX = Math.floor(36.5 - levelName.length / 2)
+
 	drawText(levelName, 13, nameX, 1)
 	drawBox(6, nameX-1, 0, levelName.length+2, 3)
-	
-	drawTextWrapped(ALL_LEVELS[levelName].description,11,20,3, 33)
-
-	drawBox(6, 19, 2, 35, 8)
-	// drawBox(6, 19, 7, 35, 3)
-	drawBox(6, 19, 9, 35, 3)
-	drawBox(6, 19, 11, 35, 7)
-
-	// NOTE, I'm using a weird method of drawing text vertically that may break in a future bbs version.
-
-	drawTextWrapped('║ ║ ╠ ║ ╠', 6, 19, 7, 1);
-	drawTextWrapped('╣ ║ ╣ ║ ╣', 6, 53, 7, 1);
+	drawBox(6, 19, 2, 35, 16)
 	drawText('╩', 6, nameX-1, 2)
 	drawText('╩', 6, nameX+levelName.length, 2)
-	
-	drawTextWrapped('╔ ║ ╬ ║ ╬ ║ ║ ║ ║ ║ ╩', 6, 43, 7, 1);
-	drawTextWrapped('╦ ║ ╬ ║ ╬ ║ ║ ║ ║ ║ ╩', 6, 48, 7, 1);
-	drawText('════╦════', 6, 44, 7)
+
+	if(option[1]){
+		
+		drawTextWrapped(ALL_LEVELS[levelName].description,11,20,3, 33)
+
+		drawBox(6, 19, 9, 35, 3)
+		drawBox(6, 19, 0, 6, 3)
+		if(userSave[levelName].bestTime == 999)
+			drawText('TODO', 6, 20, 1)
+		else
+			drawText('DONE', 13, 20, 1)
+		drawText('╠════╩', 6, 19, 2)
+
+		// NOTE, I'm using a weird method of drawing text vertically that may break in a future bbs version.
+
+		drawTextWrapped('║ ║ ╠ ║ ╠', 6, 19, 7, 1);
+		drawTextWrapped('╣ ║ ╣ ║ ╣', 6, 53, 7, 1);
+		
+		drawTextWrapped('╔ ║ ╬ ║ ╬ ║ ║ ║ ║ ║ ╩', 6, 43, 7, 1);
+		drawTextWrapped('╦ ║ ╬ ║ ╬ ║ ║ ║ ║ ║ ╩', 6, 48, 7, 1);
+		drawText('════╦════', 6, 44, 7)
 
 
-	drawText('Best Scores', 13, 20, 10)
-	drawText('Time', 13, 44, 8)
-	drawText('Char', 13, 49, 8)
+		drawText('Best Scores', 13, 20, 10)
+		drawText('Time', 13, 44, 8)
+		drawText('Char', 13, 49, 8)
 
-	color = userSave[levelName].bestTime == 999 ? 6 : 13
-	t = String(userSave[levelName].bestTime)
-	drawText(t, color, 48 - t.length, 10)
-	t = String(userSave[levelName].bestCharCount)
-	drawText(t, color, 53 - t.length, 10)
+		color = userSave[levelName].bestTime == 999 ? 6 : 13
+		t = String(userSave[levelName].bestTime)
+		drawText(t, color, 48 - t.length, 10)
+		t = String(userSave[levelName].bestCharCount)
+		drawText(t, color, 53 - t.length, 10)
 
-	sol = userSave[levelName].solutions
-	for(let i = 0; i < sol.length; i++){
-		// TODO? add solution naming?
-		drawText('Solution ' + (i+1), (levelSelectStage == 1 && levelSolutionCursor == i) ? 17 : 13, 20, 12 + i)
-		color = sol[i].time == 999 ? 6 : 13
-		t = String(sol[i].time)
-		drawText(t, color, 48 - t.length, 12 + i)
-		t = String(sol[i].charCount)
-		drawText(t, color, 53 - t.length, 12 + i)
-	}
+		sol = userSave[levelName].solutions
+		for(let i = 0; i < sol.length; i++){
+			// TODO? add solution naming?
+			drawText('Solution ' + (i+1), (levelSelectStage == 1 && levelSolutionCursor == i) ? 17 : 13, 20, 12 + i)
+			color = sol[i].time == 999 ? 6 : 13
+			t = String(sol[i].time)
+			drawText(t, color, 48 - t.length, 12 + i)
+			t = String(sol[i].charCount)
+			drawText(t, color, 53 - t.length, 12 + i)
+		}
 
-	if(sol.length < 5)
-		drawText('+ New Solution + ', (levelSelectStage == 1 && levelSolutionCursor == sol.length) ? 17 : 13, 20, 12 + sol.length)
-	
-	if(levelSelectStage == 1){
-		drawText('>', 17, 19, 12 + levelSolutionCursor)
-		if(levelDeleteKey > 0){
-			userSave[currentLevel].solutions
-			for(let i = 0; i < 23; i += (3 - levelDeleteKey)){
-				drawText('⚉', 4, 20 + i, 12 + levelSolutionCursor)
+		if(sol.length < 5)
+			drawText('+ New Solution + ', (levelSelectStage == 1 && levelSolutionCursor == sol.length) ? 17 : 13, 20, 12 + sol.length)
+		
+		if(levelSelectStage == 1){
+			drawText('>', 17, 19, 12 + levelSolutionCursor)
+			if(levelDeleteKey > 0){
+				userSave[currentLevel].solutions
+				for(let i = 0; i < 23; i += (3 - levelDeleteKey)){
+					drawText('⚉', 4, 20 + i, 12 + levelSolutionCursor)
+				}
 			}
 		}
+	}
+	else{
+		drawTextWrapped(MESSAGES[levelName],11,20,3, 33)
 	}
 }
 
 function drawLevelSelection(){
 	drawMainBoxes()
-	names = Object.keys(ALL_LEVELS);
-	for(let i = 0; i < names.length; i++){
-		drawText(names[i], levelCursor == i ? 17 : 8, 1,i+1)
+	for(let i = 0; i < LEVEL_ORDER.length; i++){
+		if(LEVEL_ORDER[i][2] > levelsDone) break;
+		drawText(LEVEL_ORDER[i][0], levelCursor == i ? 17 : 8, 1,i+1)
 	}
 	if(levelSelectStage == 0)
 		drawText('>', 17, 0, levelCursor + 1)
@@ -1719,6 +1843,16 @@ function loadLevel(levelName, version, solutionNumber){
 	else if(solutionNumber >= 0){
 		codeText = userSave[levelName].solutions[solutionNumber].code
 	}
+}
+
+function calculateLevelsDone(){
+	count = 0;
+	for(let i = 0; i < LEVEL_ORDER.length; i++){
+		if(LEVEL_ORDER[i][1] && userSave[LEVEL_ORDER[i][0]].bestTime != 999){
+			count += 1;
+		}
+	}
+	return count;
 }
 
 // - - - - ~Programming~ functions - - - -
@@ -2167,12 +2301,17 @@ function levelSelectInput(key){
 				levelCursor = Math.max(0, levelCursor - 1);
 				break;
 			case 18: // down arrow
-				levelCursor = Math.min(Object.keys(ALL_LEVELS).length - 1, levelCursor + 1);
+				if(levelCursor + 1 < LEVEL_ORDER.length && LEVEL_ORDER[levelCursor + 1][2] <= levelsDone){
+					levelCursor += 1
+				}
 				break;
 			case 10: // enter key
 				currentLevel = Object.keys(ALL_LEVELS)[levelCursor];
-				levelSelectStage = 1;
-				levelSolutionCursor = 0;
+				if(LEVEL_ORDER[levelCursor][1]){ // don't open messages as levels
+					currentLevel = LEVEL_ORDER[levelCursor][0];
+					levelSelectStage = 1;
+					levelSolutionCursor = 0;
+				}
 				break;
 			case 27: // escape
 				currentScene = 0;
@@ -2242,6 +2381,7 @@ function extraMenuInput(key){
 					saveUserData()
 					currentScene = 1
 					extraMenuCursor = 0
+					levelsDone = calculateLevelsDone()
 				}
 				break;
 			case 27: // escape
@@ -2278,12 +2418,17 @@ function winScreenInput(key){
 		switch(key){
 			case 27: // escape
 				currentScene = 1;
+				levelsDone = calculateLevelsDone();
 				break;
 		}
 	}
 }
 
 function onInput(key){
+
+	// !!!!!!!!!! FOR TESTING PURPOSES ONLY !!!!!!!!!!
+	// if(key == 48) levelsDone = 999;
+
 	switch(currentScene){
 		case 0: currentScene = 1; break;
 		case 1: levelSelectInput(key); break;
