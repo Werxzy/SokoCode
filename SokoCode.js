@@ -568,7 +568,7 @@ const ALL_LEVELS = {
 		]
 	},
 
-	// need to test
+	//pulling a block out and putting it back into place
 	'Walled Off' : {
 		description : ' ',
 		versions : [
@@ -634,6 +634,144 @@ const ALL_LEVELS = {
 				],
 				startPos : [0,4],
 				startDir : 0
+			},
+		],
+		startCode : [
+			''
+		]
+	},
+
+	// just using movements to solve a single puzzle, probably too simple
+	'Out Of Place' : {
+		description : ' Someone seems to have moved one of the boxes without permission. Please put it back before an investor notices.',
+		versions : [
+			{
+				grid : [
+					// goal
+					// [1,0,0,1],
+					// [0,0,0,0],
+					// [0,0,0,0],
+					// [1,0,0,1],
+
+					[0,1,0,1],
+					[0,0,0,0],
+					[0,0,0,0],
+					[1,0,0,1],
+				],
+				goals : [
+					[0,0], 
+					[0,3], 
+					[3,0], 
+					[3,3], 
+				],
+				startPos : [1,2],
+				startDir : 1
+			},
+			{
+				grid : [
+					[1,0,1,0],
+					[0,0,0,0],
+					[0,0,0,0],
+					[1,0,0,1],
+				],
+				goals : [
+					[0,0], 
+					[0,3], 
+					[3,0], 
+					[3,3], 
+				],
+				startPos : [1,2],
+				startDir : 1
+			},
+			{
+				grid : [
+					[1,0,0,1],
+					[0,0,0,0],
+					[0,0,1,0],
+					[1,0,0,0],
+				],
+				goals : [
+					[0,0], 
+					[0,3], 
+					[3,0], 
+					[3,3], 
+				],
+				startPos : [1,2],
+				startDir : 1
+			},
+			{
+				grid : [
+					[1,0,0,1],
+					[0,0,0,0],
+					[0,0,0,0],
+					[0,1,0,1],
+				],
+				goals : [
+					[0,0], 
+					[0,3], 
+					[3,0], 
+					[3,3], 
+				],
+				startPos : [1,2],
+				startDir : 1
+			},
+		],
+		startCode : [
+			''
+		]
+	},
+
+	// logic using forward or checking direction.
+	'North?' : {
+		description : ' The robot is already set up in the direction that the box needs to be moved.',
+		versions : [
+			{
+				grid : [
+					[0,0,0],
+					[0,1,0],
+					[0,0,0],
+				],
+				goals : [
+					[2,1], 
+				],
+				startPos : [0,0],
+				startDir : 0
+			},
+			{
+				grid : [
+					[0,0,0],
+					[0,1,0],
+					[0,0,0],
+				],
+				goals : [
+					[1,0], 
+				],
+				startPos : [0,0],
+				startDir : 1
+			},
+			{
+				grid : [
+					[0,0,0],
+					[0,1,0],
+					[0,0,0],
+				],
+				goals : [
+					[0,1], 
+				],
+				startPos : [0,0],
+				startDir : 2
+			},
+			{
+				grid : [
+					[0,0,0],
+					[0,1,0],
+					[0,0,0],
+				],
+				goals : [
+					[1,2], 
+				],
+				startPos : [0,0],
+				startDir : 3
 			},
 		],
 		startCode : [
@@ -1969,6 +2107,7 @@ function startRun(){
 	if(!isRunning){
 		isRunning = isCompiled = compile();
 		executingLine = 0
+		lastExecutedLine = -10
 		levelTime = 0
 		testingVersion = currentVersion
 		testingSpeed = baseTestingSpeed
