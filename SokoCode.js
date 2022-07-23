@@ -1,6 +1,6 @@
 let tick = 0;
 
-let gameVersion = '1.0'
+let gameVersion = '1.1'
 
 let cursorX, cursorY;
 let codeText;
@@ -1108,9 +1108,9 @@ FORWARD - The direction the robot is facing.     '
 MOV [dir] - Moves in the direction,              \
             pushing any blocks in the way.       \
                                                  \
-PUL [dir] - Similar to MOV, but pulls a block    \
-            if there\'s one in the opposite       \
-            direction.                           \
+PUL [dir] - Similar to MOV, but also pulls a     \
+            block if there\'s one in the         \
+            opposite direction.                  \
                                                  \
 FCE [dir] - Makes the robot face that direction. \
                                                  \
@@ -1683,8 +1683,12 @@ function drawLevelSelection(){
 		drawText('>', 17, 0, levelCursor + 1)
 		
 	drawLevelInfo();
-		
-	drawText("(Enter) Select              (ESC) Back", 10, 17, 19)
+	
+	if(LEVEL_ORDER[levelCursor][1])
+		drawText("(Enter) Select              (ESC) Back", 10, 17, 19);
+	else
+		drawText("                            (ESC) Back", 10, 17, 19);
+
 	if(levelSelectStage == 1 && levelSolutionCursor < userSave[currentLevel].solutions.length)
 		drawText('(DDD) Delete', 10, 32, 19)
 }
@@ -2293,6 +2297,18 @@ function editCode(key){
 			change = true;
 		}
 	}
+
+	// Delete
+	if(key == 127){
+		if(cursorX <= codeText[cursorY].length){
+			codeText[cursorY] 
+			= codeText[cursorY].slice(0, cursorX)
+			+ codeText[cursorY].slice(cursorX + 1);
+			cursorBlink = 0
+			change = true;
+		}
+	}
+
 	// Enter key
 	else if(key == 10 && codeText.length < codeHeightLimit){
 		codeText.splice(cursorY, 0, codeText[cursorY].slice(0,cursorX));
@@ -2529,7 +2545,6 @@ function winScreenInput(key){
 }
 
 function onInput(key){
-
 	switch(currentScene){
 		case 0: currentScene = 1; break;
 		case 1: levelSelectInput(key); break;
@@ -2537,5 +2552,4 @@ function onInput(key){
 		case 3: extraMenuInput(key); break;
 		case 4: winScreenInput(key); break;
 	}
-	
 }
