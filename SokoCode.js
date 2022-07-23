@@ -8,7 +8,7 @@ let codeWidthLimit = 15;
 let codeHeightLimit = 18;
 let cursorBlink;
 
-let robotX, robotY, robotDir, robotState, robotTrapped;
+let robotX, robotY, robotDir, robotState, robotTrapped, robotHalted;
 
 let level = [];
 let filledHoles = []; // just for looks, shouldn't cause any puzzle interaction
@@ -46,7 +46,7 @@ const LEVEL_ORDER = [
 // oops all spaces
 const MESSAGES = {
 	//originally was going to go with BOXTOPIA, but it already exists
-	'Greetings!' : ' Welcome to the team! We\'re glad you too saw potential for the box to be the end-all be-all product of the future, and begin your internship with us here at BOXTOPIC.™ Where the future is "Thinking inside the box"! And just as a reminder, the role you have signed up for is an UNPAID internship.                                                          If you have any questions, please contact James.',
+	'Greetings!' : ' Welcome to the team! We\'re glad you too saw potential for the box to be the end-all be-all product of the future, and begin your internship with us here at BOXTOPIC.™ Where the future is "Thinking inside the box"! And just as a reminder, the role you have signed up for is an UNPAID internship.                                                          If you have any questions, please contact the lead box technician, James.',
 	'[TITLE]' : ' We at [COMPANY-NAME] believe that [PRODUCT1] are the biggest game-changer since [PRODUCT2]! The future of [TARGET-AUDIENCE] is in your hands. We can\'t let Big [PRODUCT1] get one on us. Keep working hard to ensure [MOTIVE]. And remember, [TAGLINE].                                                                                                                                                                Automated message usingERROR CODE 0x301D8A PLEASE NOTIFY SERVER ADMINISTRATOR' ,
 	'Goodbye...' : ' Sorry, but we\'re having to let go all staff due to low profits. It turns out boxes were not the next big trend we predicted them to be. You may finish any work you have left.                                                       We wish you well in your next line of work.                                                        sincerely,                        [SENDER-NAME] '
 }
@@ -74,7 +74,7 @@ const ALL_LEVELS = {
 */
 	// probably first level, introducing mov and pul
 	'Intro To Boxes' : {
-		description : ' This is a test level',
+		description : ' We\'ve set up some boxes in the hallway so that you can learn how to program the robot. Have it move the boxes on the targets.',
 		versions : [ // there can be multiple versions of the level that the player would need to account for
 			{
 				grid : [ // the grid of boxes or walls
@@ -1118,8 +1118,8 @@ ROT [LEFT/RIGHT] - Rotates the robot 90 degrees. '
 ,
 ' < Logic Instructions >                          \
                                                  \
-CHK [dir] - Sets state to TRUE if there is a     \
-            block in that direction,             \
+CHK [dir] - Sets state to TRUE if there is an    \
+            adjacent block in that direction,    \
             otherwise FALSE.                     \
                                                  \
 CHF [dir] - Sets state to TRUE if the robot is   \
@@ -1365,6 +1365,7 @@ function onConnect()
 	robotDir = 0;
 	robotState = false;
 	robotTrapped = false;
+	robotHalted = false;
 	
 	compiledCode = [];
 	executingLine = -1;
@@ -1738,8 +1739,11 @@ function drawLevelScreen(){
 	if(currentScene == 2){
 		if(isRunning){
 			drawText('(1) Faster (2) Step (3) Stop  ', 10, 17, 19);
+			let state = robotState ? ' TRUE' : 'FALSE';
+			state = robotTrapped ? 'STUCK' : state;
+			state = robotHalted ? 'HALT' : state;
 
-			statusText = 'Time:     State:' + (robotTrapped ? 'STUCK' : robotState ? ' TRUE' : 'FALSE');
+			statusText = 'Time:     State:' + state;
 			
 			f = ['RIGHT','   UP',' LEFT',' DOWN'][robotDir];
 			statusText += '  Facing:' + f;
@@ -1921,6 +1925,7 @@ function loadLevel(levelName, version, solutionNumber){
 	robotDir = loading.startDir
 	robotState = false
 	robotTrapped = false
+	robotHalted = false
 	executingLine = 0
 
 	if(solutionNumber == -1){
@@ -2097,8 +2102,11 @@ function codeStep(){
 	while(executingLine < compiledCode.length && compiledCode[executingLine].length == 0)
 		executingLine++;
 	
-	if(executingLine >= compiledCode.length) return; // Reached end of code
-	
+	if(executingLine >= compiledCode.length) {
+		robotHalted = true
+		return; // Reached end of code
+	}
+
 	levelTime++;
 	lastExecutedLine = executingLine;
 
@@ -2340,6 +2348,7 @@ function startRun(){
 		levelTime = 0
 		testingVersion = currentVersion
 		testingSpeed = baseTestingSpeed
+		robotHalted = false
 	}
 }
 
