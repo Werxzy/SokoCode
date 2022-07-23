@@ -27,21 +27,28 @@ const LEVEL_ORDER = [
 	['North?', true, 2],			// 2
 	['James\'s Fault', true, 3],	// 2
 	['Perilous Push', true, 4],		// 3
-	['Mind The Gap', true, 5],		// 3
+	['Cornered', true, 5],			// 3?
+	
+	['[TITLE]', false, 6],
+	
 	['Perfect Packing', true, 6],	// 3
-	['Double Click', true, 7],		// 3
-	['One Sided', true, 8],			// 3
-	['Walled Off', true, 9],		// 4
-	['Second Row', true, 10],		// 5
-	['Clear Paperwork', true, 11],	// 5
+	['Mind The Gap', true, 7],		// 3
+	['Double Click', true, 8],		// 3
+	['#403 and #405', true, 9],	    // 3/4 ? will need to test
+	['One Sided', true, 10],		// 3
+	['Walled Off', true, 11],		// 4
+	['Second Row', true, 12],		// 5
+	['Clear Paperwork', true, 13],	// 5
 
-	['Goodbye...', false, 12],
+	['Goodbye...', false, 14],
 ]
 
 // oops all spaces
 const MESSAGES = {
-	'Greetings!' : ' Welcome to the team! We\'re glad you too saw potential for the box to be the end-all be-all product of the future, and begin your internship with us here at BOXTOPIA.™ Where the future is "Thinking inside the box"! And just as a reminder, the role you have signed up for is an UNPAID internship.                                                          If you have any questions, please contact James.',
-	'Goodbye...' : ' Sorry, but we\'re having to let go all staff due to low profits. It turns out boxes were not the next big trend we thought it would be. You may finish any work you have left.                                                       Good luck on all of your future endevors. '
+	//originally was going to go with BOXTOPIA, but it already exists
+	'Greetings!' : ' Welcome to the team! We\'re glad you too saw potential for the box to be the end-all be-all product of the future, and begin your internship with us here at BOXTOPIC.™ Where the future is "Thinking inside the box"! And just as a reminder, the role you have signed up for is an UNPAID internship.                                                          If you have any questions, please contact James.',
+	'[TITLE]' : ' We at [COMPANY-NAME] believe that [PRODUCT1] are the biggest game-changer since [PRODUCT2]! The future of [TARGET-AUDIENCE] is in your hands. We can\'t let Big [PRODUCT1] get one on us. Keep working hard to ensure [MOTIVE]. And remember, [TAGLINE].                                                                                                                                                                Automated message usingERROR CODE 0x301D8A PLEASE NOTIFY SERVER ADMINISTRATOR' ,
+	'Goodbye...' : ' Sorry, but we\'re having to let go all staff due to low profits. It turns out boxes were not the next big trend we predicted them to be. You may finish any work you have left.                                                       We wish you well in your next line of work.                                                        sincerely,                        [SENDER-NAME] '
 }
 
 const ALL_LEVELS = {
@@ -459,7 +466,7 @@ const ALL_LEVELS = {
 		]
 	},
 	'Perfect Packing' : {
-		description : ' We got a new shipment of boxes and the warehouse is already pretty full.  Make sure not to waste any space.',
+		description : ' The new shipment of boxes and the warehouse is already pretty full.  Make sure not to waste any space.',
 		versions : [
 			{
 				grid : [
@@ -599,7 +606,7 @@ const ALL_LEVELS = {
 
 	//pulling a block out and putting it back into place
 	'Walled Off' : {
-		description : ' ',
+		description : ' James asked me the other day what products we\'re selling. Isn\'t it obvious? BOXES! What kind of company, that has "box" in its name, would sell         anything else?',
 		versions : [
 			{
 				grid : [
@@ -895,6 +902,87 @@ const ALL_LEVELS = {
 		]
 	},
 	 */
+
+	'Cornered' : {
+		description : ' We\'re going to recieve a large order of new boxes soon.  We\'ll need to make some space for them.',
+		versions : [
+			{
+				grid : [
+					[0,0,0,0,0],
+					[0,1,0,1,0],
+					[0,0,0,0,0],
+					[0,1,0,1,0],
+					[0,0,0,0,0],
+				],
+				goals : [
+					[0,0], 
+					[0,4], 
+					[4,0], 
+					[4,4], 
+				],
+				startPos : [2,1],
+				startDir : 0
+			},
+			{
+				grid : [
+					[0,0,0,0,0],
+					[0,1,0,1,0],
+					[0,0,0,0,0],
+					[0,1,0,1,0],
+					[0,0,0,0,0],
+				],
+				goals : [
+					[0,0], 
+					[0,4], 
+					[4,0], 
+					[4,4], 
+				],
+				startPos : [3,2],
+				startDir : 3
+			},
+		],
+		startCode : [
+			''
+		]
+	},
+
+	'#403 and #405' : {
+		description : ' For this assignment, you will be working on one robot that will take care of two completely different warehouses.',
+		versions : [
+			{
+				grid : [
+					[0,0,1,0],
+					[0,0,0,1],
+					[0,0,0,0],
+					[1,0,0,0],
+				],
+				goals : [
+					[2,1], 
+					[1,3], 
+					[3,2], 
+				],
+				startPos : [3,3],
+				startDir : 1
+			},
+			{
+				grid : [
+					[7,7,7,7,7,7,1,7],
+					[1,0,0,1,7,0,0,7],
+					[7,0,7,7,7,7,0,7],
+					[7,0,0,0,0,0,0,1],
+					[7,1,7,7,7,7,7,7],
+				],
+				goals : [
+					[2,1], 
+				],
+				startPos : [5,1],
+				startDir : 0
+			},
+		],
+		startCode : [
+			''
+		]
+	},
 };
 
 /*
@@ -1121,7 +1209,8 @@ const titleCubes = [
 		offsets:[0, 0],
 		spacing: 3,
 		yStart: 6,
-		speed: -160
+		speed: -160,
+		shift: 0
 	},
 	{
 		text:[
@@ -1132,7 +1221,8 @@ const titleCubes = [
 		offsets:[0, 0],
 		spacing: 3,
 		yStart: 7,
-		speed: 80
+		speed: 80,
+		shift: 1.5
 	},
 	{
 		text:[
@@ -1144,7 +1234,8 @@ const titleCubes = [
 		offsets:[0, 0, 0],
 		spacing: 5,
 		yStart: 8,
-		speed: 48
+		speed: 48,
+		shift: 2.5
 	},
 	{
 		text:[
@@ -1157,7 +1248,8 @@ const titleCubes = [
 		offsets:[0, 0, 0, 0],
 		spacing: 8,
 		yStart: 10,
-		speed: 30
+		speed: 30,
+		shift: 4
 	},
 	{
 		text:[
@@ -1172,7 +1264,8 @@ const titleCubes = [
 		offsets:[1, 0, 0, 0, 0, 0],
 		spacing: 12,
 		yStart: 12,
-		speed: 20
+		speed: 20,
+		shift: 6
 	}
 
 ];
@@ -1467,9 +1560,11 @@ function drawTitleScreen(){
 
 	for(let r = 0; r < titleCubes.length; r++){
 		cRow = titleCubes[r];
-		for(let x = (Math.floor(tick / cRow.speed + 28) % cRow.spacing) - cRow.spacing; x < 56; x += cRow.spacing){
-			for(let i = 0; i < cRow.text.length; i++){
-				drawText(cRow.text[i], cRow.colors[i] + Math.min(1 - i, 0), x + cRow.offsets[i], i + cRow.yStart)
+		for(let i = 0; i < cRow.text.length; i++){
+			let col = cRow.colors[i] + Math.min(1 - i, 0)
+			let y = i + cRow.yStart
+			for(let x = (Math.floor(tick / cRow.speed + 28 + cRow.shift) % cRow.spacing) - cRow.spacing; x < 56; x += cRow.spacing){
+				drawText(cRow.text[i], col, x + cRow.offsets[i], y)
 			}
 		}
 	}
@@ -2425,9 +2520,6 @@ function winScreenInput(key){
 }
 
 function onInput(key){
-
-	// !!!!!!!!!! FOR TESTING PURPOSES ONLY !!!!!!!!!!
-	// if(key == 48) levelsDone = 999;
 
 	switch(currentScene){
 		case 0: currentScene = 1; break;
