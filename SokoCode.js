@@ -15,32 +15,44 @@ let filledHoles = []; // just for looks, shouldn't cause any puzzle interaction
 let goals = [];
 // max level size is 9 by 5 
 
-//[key, isLevel, win requirements]
 const LEVEL_ORDER = [
-	['Greetings!', false, 0],
-
 	// somewhat sorted by guessed difficulty
 
-	['Intro To Boxes', true, 0],	// 0
-	['That One Box', true, 1],		// 1
-	['Out Of Place', true, 1],		// 1
-	['North?', true, 2],			// 2
-	['James\'s Fault', true, 2],	// 2
-	['Perilous Push', true, 3],		// 3
-	['Cornered', true, 4],			// 3?
-	
-	['[TITLE]', false, 5],
-	
-	['Perfect Packing', true, 5],	// 3
-	['Mind The Gap', true, 6],		// 3
-	['Double Click', true, 7],		// 3
-	['#403 and #405', true, 8],	    // 3/4 ? will need to test
-	['One Sided', true, 9],		// 3
-	['Walled Off', true, 10],		// 4
-	['Second Row', true, 11],		// 5
-	['Clear Paperwork', true, 12],	// 5
+	{
+		'message' : 'Greetings!', 
+		'levels' : [
+			['Intro To Boxes', 0],	// 0
+			['That One Box', 1],	// 1
+			['Out Of Place', 1],	// 1
+			['North?', 2],			// 2
+			['James\'s Fault', 2],	// 2
+			['Perilous Push', 3],	// 3
+			['Cornered', 4],		// 3?
+		],
+		'win requirements' : 0
+	},
+	 {
+		'message' : '[TITLE]',
+		'levels' : [
+			['Perfect Packing', 5],	// 3
+			['Mind The Gap', 6],	// 3
+			['Double Click', 7],	// 3
+			['#403 and #405', 8],	// 3/4 ? will need to test
+			['One Sided', 9],		// 3
+			['Walled Off', 10],		// 4
+			['Second Row', 11],		// 5
+			['Clear Paperwork', 12],// 5
+		],
+		'win requirements' : 5
+	},
+	{
+		'message' : 'Goodbye...',
+		'levels' : [
 
-	['Goodbye...', false, 13],
+		],
+		'win requirements' : 13
+	},
+
 ]
 
 // oops all spaces
@@ -90,8 +102,8 @@ const ALL_LEVELS = {
 			},
 		],
 		startCode : [
-			'MOV LEFT',
-			'MOV RIGHT',
+			'MOV WEST',
+			'MOV FORTH',
 			'',
 			'/LOOK AT MANUAL',
 			'/IN MENU FOR',
@@ -1056,11 +1068,13 @@ let prevBestChar;
 
 let currentScene;
 let currentLevel;
+let currentLevelGroup;
 let currentVersion;
 let testingVersion;
 let currentSolution;
 
 let levelsDone;
+let levelsDoneByGroup;
 
 let levelCursor;
 let levelSolutionCursor;
@@ -1099,10 +1113,10 @@ the assignment.'
 ,
 ' < [dir] Words >                                 \
                                        N         \
-NORTH - Represents that direction.     ║         \
-SOUTH -                              W═╬═E       \
-EAST  -                                ║        \
-WEST  -                                S         \
+NORTH - Represents that direction      ║         \
+SOUTH - relative to the view.        W═╬═E       \
+EAST  - North is always the top        ║         \
+WEST  - of the screen.                 S         \
                                                  \
 FORTH - Relative to the direction the            \
 BACK  - robot is facing.                         \
@@ -1402,6 +1416,7 @@ function onConnect()
 
 	currentScene = 0;
 	currentLevel = 0;
+	currentLevelGroup = 0;
 	currentVersion = 0;
 	testingVersion = 0;
 	currentSolution = 0;
@@ -1414,7 +1429,7 @@ function onConnect()
 	extraMenuCursor = 0;
 	extraMenuPage = 0;
 
-	levelsDone = calculateLevelsDone()
+	calculateLevelsDone()
 }
 
 // - - - - Drawing Functions - - - -
@@ -1624,17 +1639,20 @@ function drawTitleScreen(){
 }
 
 function drawLevelInfo(){
-	option = LEVEL_ORDER[levelCursor]
-	levelName = option[0]
-	nameX = Math.floor(36.5 - levelName.length / 2)
+	
+	if(levelSelectStage > 0){
+		if(LEVEL_ORDER[currentLevelGroup]['levels'].length == 0)
+			return;
 
-	drawText(levelName, 13, nameX, 1)
-	drawBox(6, nameX-1, 0, levelName.length+2, 3)
-	drawBox(6, 19, 2, 35, 16)
-	drawText('╩', 6, nameX-1, 2)
-	drawText('╩', 6, nameX+levelName.length, 2)
-
-	if(option[1]){
+		option = LEVEL_ORDER[currentLevelGroup]['levels'][levelCursor]
+		levelName = option[0]
+		nameX = Math.floor(36.5 - levelName.length / 2)
+	
+		drawText(levelName, 13, nameX, 1)
+		drawBox(6, nameX-1, 0, levelName.length+2, 3)
+		drawBox(6, 19, 2, 35, 16)
+		drawText('╩', 6, nameX-1, 2)
+		drawText('╩', 6, nameX+levelName.length, 2)
 		
 		drawTextWrapped(ALL_LEVELS[levelName].description,11,20,3, 33)
 
@@ -1669,7 +1687,7 @@ function drawLevelInfo(){
 		sol = userSave[levelName].solutions
 		for(let i = 0; i < sol.length; i++){
 			// TODO? add solution naming?
-			drawText('Solution ' + (i+1), (levelSelectStage == 1 && levelSolutionCursor == i) ? 17 : 13, 20, 12 + i)
+			drawText('Solution ' + (i+1), (levelSelectStage == 2 && levelSolutionCursor == i) ? 17 : 13, 20, 12 + i)
 			color = sol[i].time == 999 ? 6 : 13
 			t = String(sol[i].time)
 			drawText(t, color, 48 - t.length, 12 + i)
@@ -1678,9 +1696,9 @@ function drawLevelInfo(){
 		}
 
 		if(sol.length < 5)
-			drawText('+ New Solution + ', (levelSelectStage == 1 && levelSolutionCursor == sol.length) ? 17 : 13, 20, 12 + sol.length)
+			drawText('+ New Solution + ', (levelSelectStage == 2 && levelSolutionCursor == sol.length) ? 17 : 13, 20, 12 + sol.length)
 		
-		if(levelSelectStage == 1){
+		if(levelSelectStage == 2){
 			drawText('>', 17, 19, 12 + levelSolutionCursor)
 			if(levelDeleteKey > 0){
 				userSave[currentLevel].solutions
@@ -1691,27 +1709,53 @@ function drawLevelInfo(){
 		}
 	}
 	else{
-		drawTextWrapped(MESSAGES[levelName],11,20,3, 33)
+		levelName = LEVEL_ORDER[levelCursor]['message']
+		nameX = Math.floor(36.5 - levelName.length / 2)
+	
+		drawText(levelName, 13, nameX, 1)
+		drawBox(6, nameX-1, 0, levelName.length+2, 3)
+		drawBox(6, 19, 2, 35, 16)
+		drawText('╩', 6, nameX-1, 2)
+		drawText('╩', 6, nameX+levelName.length, 2)
+
+		drawTextWrapped(MESSAGES[LEVEL_ORDER[levelCursor]['message']],11,20,3, 33)
 	}
 }
 
 function drawLevelSelection(){
 	drawMainBoxes()
-	for(let i = 0; i < LEVEL_ORDER.length; i++){
-		if(LEVEL_ORDER[i][2] > levelsDone) break;
-		drawText(LEVEL_ORDER[i][0], levelCursor == i ? 17 : 8, 1,i+1)
+
+	if(levelSelectStage == 0){
+		for(let i = 0; i < LEVEL_ORDER.length; i++){
+			let left = LEVEL_ORDER[i]['win requirements'] - levelsDone
+			if(left > 0){
+				drawTextWrapped('Finish ' + left + ' more assignments.', 4, 1,i*2 + 1, 15);
+				break;
+			}
+			drawText(LEVEL_ORDER[i]['message'], levelCursor == i ? 17 : 8, 1,i*2 + 1)
+			if(LEVEL_ORDER[i]['levels'].length > 0){
+				let doneString = '- Done ' + levelsDoneByGroup[i] + '/' + LEVEL_ORDER[i]['levels'].length
+				drawText(doneString, 7, 15 - doneString.length,i*2 + 2)
+			}
+		}
+		drawText('>', 17, 0, levelCursor * 2 + 1)
 	}
-	if(levelSelectStage == 0)
+
+	if(levelSelectStage > 0){
+		for(let i = 0; i < LEVEL_ORDER[currentLevelGroup]['levels'].length; i++){
+			let lev = LEVEL_ORDER[currentLevelGroup]['levels'][i];
+			if(lev[1] > levelsDone) break;
+			drawText(lev[0], levelCursor == i ? 17 : 8, 1,i+1)
+		}
+	}
+	if(levelSelectStage == 1)
 		drawText('>', 17, 0, levelCursor + 1)
 		
 	drawLevelInfo();
 	
-	if(LEVEL_ORDER[levelCursor][1])
-		drawText("(Enter) Select              (ESC) Back", 10, 17, 19);
-	else
-		drawText("                            (ESC) Back", 10, 17, 19);
+	drawText("(Enter) Select              (ESC) Back", 10, 17, 19);
 
-	if(levelSelectStage == 1 && levelSolutionCursor < userSave[currentLevel].solutions.length)
+	if(levelSelectStage == 2 && levelSolutionCursor < userSave[currentLevel].solutions.length)
 		drawText('(DDD) Delete', 10, 32, 19)
 }
 
@@ -1784,7 +1828,7 @@ function drawLevelScreen(){
 			if(ALL_LEVELS[currentLevel].versions.length > 1)
 				drawText('(1) Run (2) Step (3) Cycle  (ESC) Menu', 10, 17, 19);
 			else
-				drawText('(1) Run (2) Step            (ESC) Menu', 10, 17, 19);
+				drawText('(1) Run (2) Step (0) Ref.   (ESC) Menu', 10, 17, 19);
 		}		
 	}
 	
@@ -1850,7 +1894,7 @@ function drawWinScreen(){
 // - - - - Puzzle Functions - - - -
 
 function getDir(dir){
-	if(dir > 4)
+	if(dir >= 4)
 		return getDir((robotDir + dir) % 4)
 	return [[1,0],[0,-1],[-1,0],[0,1]][dir]
 }
@@ -1985,13 +2029,18 @@ function loadLevel(levelName, version, solutionNumber){
 }
 
 function calculateLevelsDone(){
-	count = 0;
+	levelsDoneByGroup = []
+	let count = 0
 	for(let i = 0; i < LEVEL_ORDER.length; i++){
-		if(LEVEL_ORDER[i][1] && userSave[LEVEL_ORDER[i][0]].bestTime != 999){
-			count += 1;
+		levelsDoneByGroup.push(0)
+		for(let j = 0; j < LEVEL_ORDER[i]['levels'].length; j++){
+			if(userSave[LEVEL_ORDER[i]['levels'][j][0]].bestTime != 999){
+				count += 1;
+				levelsDoneByGroup[i] += 1
+			}
 		}
 	}
-	return count;
+	levelsDone = count
 }
 
 // - - - - ~Programming~ functions - - - -
@@ -2506,31 +2555,51 @@ function levelInput(key){
 }
 
 function levelSelectInput(key){
-	if(levelSelectStage == 0){ // selecting a level
+	if(levelSelectStage == 0){ // selecting level group
 		switch(key){
 			case 17: // up arrow
 				levelCursor = Math.max(0, levelCursor - 1);
 				break;
 			case 18: // down arrow
-				if(levelCursor + 1 < LEVEL_ORDER.length && LEVEL_ORDER[levelCursor + 1][2] <= levelsDone){
+				if(levelCursor + 1 < LEVEL_ORDER.length && LEVEL_ORDER[levelCursor + 1]['win requirements'] <= levelsDone){
 					levelCursor += 1
 				}
 				break;
 			case 10: // enter key
-				currentLevel = Object.keys(ALL_LEVELS)[levelCursor];
-				if(LEVEL_ORDER[levelCursor][1]){ // don't open messages as levels
-					currentLevel = LEVEL_ORDER[levelCursor][0];
+				if(LEVEL_ORDER[levelCursor]['levels'].length > 0){
+					currentLevelGroup = levelCursor;
+					levelCursor = 0;
 					levelSelectStage = 1;
-					levelSolutionCursor = 0;
 				}
 				break;
 			case 27: // escape
 				currentScene = 0;
 				break;
 		}
+	}
+	else if(levelSelectStage == 1){ // selecting a level
+		switch(key){
+			case 17: // up arrow
+				levelCursor = Math.max(0, levelCursor - 1);
+				break;
+			case 18: // down arrow
+				if(levelCursor + 1 < LEVEL_ORDER[currentLevelGroup]['levels'].length && LEVEL_ORDER[currentLevelGroup]['levels'][levelCursor + 1][1] <= levelsDone){
+					levelCursor += 1
+				}
+				break;
+			case 10: // enter key
+				currentLevel = LEVEL_ORDER[currentLevelGroup]['levels'][levelCursor][0];
+				levelSelectStage = 2;
+				levelSolutionCursor = 0;
+				break;
+			case 27: // escape
+				levelCursor = currentLevelGroup;
+				levelSelectStage = 0
+				break;
+		}
 		levelDeleteKey = 0
 	}
-	else if(levelSelectStage == 1){ // selecting a solution
+	else if(levelSelectStage == 2){ // selecting a solution
 		if(key == 100 || key == 68){
 			if(levelSolutionCursor < userSave[currentLevel].solutions.length 
 					&& ++levelDeleteKey >= 3){
@@ -2562,7 +2631,7 @@ function levelSelectInput(key){
 				cursorX = cursorY = 0;
 				break;
 			case 27: // escape
-				levelSelectStage = 0;
+				levelSelectStage = 1;
 				break;
 		}
 	}
@@ -2592,7 +2661,7 @@ function extraMenuInput(key){
 					saveUserData()
 					currentScene = 1
 					extraMenuCursor = 0
-					levelsDone = calculateLevelsDone()
+					calculateLevelsDone()
 				}
 				break;
 			case 27: // escape
@@ -2633,7 +2702,7 @@ function winScreenInput(key){
 		switch(key){
 			case 27: // escape
 				currentScene = 1;
-				levelsDone = calculateLevelsDone();
+				calculateLevelsDone();
 				break;
 		}
 	}
