@@ -25,22 +25,22 @@ const LEVEL_ORDER = [
 	['That One Box', true, 1],		// 1
 	['Out Of Place', true, 1],		// 1
 	['North?', true, 2],			// 2
-	['James\'s Fault', true, 3],	// 2
-	['Perilous Push', true, 4],		// 3
-	['Cornered', true, 5],			// 3?
+	['James\'s Fault', true, 2],	// 2
+	['Perilous Push', true, 3],		// 3
+	['Cornered', true, 4],			// 3?
 	
-	['[TITLE]', false, 6],
+	['[TITLE]', false, 5],
 	
-	['Perfect Packing', true, 6],	// 3
-	['Mind The Gap', true, 7],		// 3
-	['Double Click', true, 8],		// 3
-	['#403 and #405', true, 9],	    // 3/4 ? will need to test
-	['One Sided', true, 10],		// 3
-	['Walled Off', true, 11],		// 4
-	['Second Row', true, 12],		// 5
-	['Clear Paperwork', true, 13],	// 5
+	['Perfect Packing', true, 5],	// 3
+	['Mind The Gap', true, 6],		// 3
+	['Double Click', true, 7],		// 3
+	['#403 and #405', true, 8],	    // 3/4 ? will need to test
+	['One Sided', true, 9],		// 3
+	['Walled Off', true, 10],		// 4
+	['Second Row', true, 11],		// 5
+	['Clear Paperwork', true, 12],	// 5
 
-	['Goodbye...', false, 14],
+	['Goodbye...', false, 13],
 ]
 
 // oops all spaces
@@ -1095,13 +1095,16 @@ towards this amount. (Make comments using "/")   \
 the assignment.'
 ,
 ' < [dir] Words >                                 \
+                                       N         \
+NORTH - Represents that direction.     ║         \
+SOUTH -                              W═╬═E       \
+EAST  -                                ║        \
+WEST  -                                S         \
                                                  \
-LEFT  - Represents that direction.               \
-RIGHT -                                          \
-UP    -                                          \
-DOWN  -                                          \
-                                                 \
-FORWARD - The direction the robot is facing.     '
+FORTH - Relative to the direction the            \
+BACK  - robot is facing.                         \
+LEFT  -                                          \
+RIGHT -                                          '
 ,
 ' < Movement Instructions >                       \
                                                  \
@@ -1131,6 +1134,8 @@ SET [TRUE/FALSE] - Sets the state of the robot.  '
 ' < Jump Instructions >                           \
                                                  \
 [any]:      - Creates a label.                   \
+              Can be on the same line as         \
+              an instruction.                    \
                                                  \
 JMP [label] - Jumps to label.                    \
                                                  \
@@ -1822,8 +1827,8 @@ function drawWinScreen(){
 // - - - - Puzzle Functions - - - -
 
 function getDir(dir){
-	if(dir == 4)
-		return getDir(robotDir)
+	if(dir > 4)
+		return getDir(robotDir + (dir % 4))
 	return [[1,0],[0,-1],[-1,0],[0,1]][dir]
 }
 
@@ -1979,11 +1984,16 @@ const keywords ={
 // WARNING these may change in order
 
 const dirwords = {
-	'RIGHT': 0,
-	'UP': 1,
-	'LEFT': 2,
-	'DOWN': 3,
-	'FORWARD': 4
+	'EAST'  : 0,
+	'NORTH' : 1,
+	'WEST'  : 2,
+	'SOUTH' : 3,
+
+	'FORTH' : 4,
+	'LEFT'  : 5,
+	'DOWN'  : 6,
+	'RIGHT' : 7
+}
 }
 
 function compile(){
