@@ -1828,7 +1828,7 @@ function drawWinScreen(){
 
 function getDir(dir){
 	if(dir > 4)
-		return getDir(robotDir + (dir % 4))
+		return getDir((robotDir + dir) % 4)
 	return [[1,0],[0,-1],[-1,0],[0,1]][dir]
 }
 
@@ -1843,6 +1843,13 @@ function opposite(dir){
 
 function insideLevel(x, y){
 	return x >= 0 && y >= 0 && x < level[0].length && y < level.length;
+}
+
+function setFacing(dir){
+	if(dir >= 4)
+		robotDir = (robotDir + dir) % 4;
+	else
+		robotDir = dir;
 }
 
 function move(dir){
@@ -1979,7 +1986,8 @@ const keywords ={
 	'MOV': [6, 'dir'],
 	'PUL': [7, 'dir'],
 	'FCE': [8, 'dir'],
-	'ROT': [9, 'r/l']
+	'ROT': [9, 'r/l'],
+	'FRS': [10, '4dirshorts']
 }
 // WARNING these may change in order
 
@@ -1991,9 +1999,20 @@ const dirwords = {
 
 	'FORTH' : 4,
 	'LEFT'  : 5,
-	'DOWN'  : 6,
+	'BACK'  : 6,
 	'RIGHT' : 7
 }
+
+const dirshorts = {
+	'E'  : 0,
+	'N' : 1,
+	'W'  : 2,
+	'S' : 3,
+
+	'F' : 4,
+	'L'  : 5,
+	'B'  : 6,
+	'R' : 7
 }
 
 function compile(){
@@ -2054,9 +2073,11 @@ function compile(){
 		}
 
 		if(words[0] in keywords){
-			if(keywords[words[0]][1] == 'dir'){
+			let w = keywords[words[0]][1]
+
+			if(w == 'dir'){
 				if(words[1] in dirwords){
-					compiledCode.push([ keywords[words[0]][0], dirwords[words[1]], i])
+					compiledCode.push([ keywords[words[0]][0], dirwords[words[1]]])
 				}
 				else{
 					// ERROR, invalid direction
@@ -2064,9 +2085,10 @@ function compile(){
 					return false
 				}
 			}
-			else if(keywords[words[0]][1] == 'label'){
+
+			else if(w == 'label'){
 				if(words[1] in labels){
-					compiledCode.push([ keywords[words[0]][0], labels[words[1]], i])
+					compiledCode.push([ keywords[words[0]][0], labels[words[1]]])
 				}
 				else{
 					// ERROR, invalid label
@@ -2075,9 +2097,9 @@ function compile(){
 				}
 			}
 
-			else if(keywords[words[0]][1] == 'bool'){
+			else if(w == 'bool'){
 				if(words[1] == 'TRUE' || words[1] == 'FALSE'){
-					compiledCode.push([ keywords[words[0]][0], words[1] == 'TRUE', i])
+					compiledCode.push([ keywords[words[0]][0], words[1] == 'TRUE'])
 				}
 				else{
 					// ERROR, invalid direction
@@ -2086,15 +2108,35 @@ function compile(){
 				}
 			}
 
-			else if(keywords[words[0]][1] == 'r/l'){
+			else if(w == 'r/l'){
 				if(words[1] == 'RIGHT' || words[1] == 'LEFT'){
-					compiledCode.push([ keywords[words[0]][0], words[1] == 'RIGHT', i])
+					compiledCode.push([ keywords[words[0]][0], words[1] == 'RIGHT'])
 				}
 				else{
 					// ERROR, invalid direction
 					errorMessage = [i, 'Invalid direction, use LEFT/RIGHT.']
 					return false
 				}
+			}
+
+			else if(w == '4dirshorts'){
+				if(words.length == 1 || words[1].length != 4){
+					// ERROR, invalid direction
+					errorMessage = [i, 'Invalid number of characters.']
+					return false
+				}
+				let d = words[1].split('')
+				let c = [ keywords[words[0]][0] ];
+
+				for(let j = 0; j < 4; j++){
+					if(!(d[j] in dirshorts)){
+						errorMessage = [i, 'Invalid short direction "' + d[j] + '".']
+						return false
+					}
+					c.push(dirshorts[d[j]])
+				}
+
+				compiledCode.push(c)
 			}
 		}
 		else{
@@ -2169,14 +2211,21 @@ function codeStep(){
 			break;
 
 		case 8: // FCE
-			d = compiledCode[executingLine++][1]
-			if (d >= 0 && d < 4)
-				robotDir = d;
+			setFacing(compiledCode[executingLine++][1])
 			break;
 
 		case 9: // ROT
 			rotateRobot(compiledCode[executingLine++][1]);
 			break;
+
+		case 10: // FRS
+			for(let i = 1; i < 5; i++){
+				if (move(compiledCode[executingLine][i])){
+					setFacing(compiledCode[executingLine][i])
+					break;
+				}
+			}
+			executingLine += 1;
 	}
 
 	
