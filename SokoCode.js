@@ -1079,8 +1079,11 @@ requested position.                              \
                                                  \
  It doesn\'t matter if the robot is in the       \
 middle of instructions, once all of the boxes    \
-are in place, the robot will automatically.      \
-shut off'
+are in place, the robot will automatically       \
+shut off.                                        \
+                                                 \
+ You can press (0) to open a quick reference     \
+guide for valid instructions.'
 ,
 ' < Scoring >                                     \
                                                  \
@@ -1143,6 +1146,20 @@ JMT [label] - Jumps to label if state is TRUE.   \
                                                  \
 JMF [label] - Jumps to label if state is FALSE.  '
 ];
+
+const instQuickRef = 
+' < Quick Reference >                             \
+                                                 \
+[dir] Words - NORTH SOUTH EAST WEST           N  \
+              FORTH BACK RIGHT LEFT          W╬E \
+                                              S  \
+Movement - MOV PUL FCE ROT FRS                   \
+                                                 \
+Logic - CHK CHF SET                              \
+                                                 \
+Label - [any]: [0 or 1 instruction]              \
+                                                 \
+Jump - JMP JMT JMF                               '
 
 const creditsPage = 
 'Soko Code by Werxzy                              \
@@ -1794,7 +1811,13 @@ function drawLevelExtraMenu(){
 		drawTextWrapped(creditsPage, 10, 4, 4, 48)
 	}
 	
-	drawText('(ESC) Back', 10, 45, 19)
+	if(extraMenuPage == 3){ // quick reference
+		drawTextWrapped(instQuickRef, 10, 4, 4, 48)
+		drawText('(any) Back', 10, 45, 19)
+	}
+	else{
+		drawText('(ESC) Back', 10, 45, 19)
+	}
 }
 
 function drawWinScreen(){
@@ -2122,7 +2145,8 @@ function compile(){
 			else if(w == '4dirshorts'){
 				if(words.length == 1 || words[1].length != 4){
 					// ERROR, invalid direction
-					errorMessage = [i, 'Invalid number of characters.']
+					// errorMessage = [i, 'Invalid number of characters.']
+					errorMessage = [i, 'Invalid direction.']
 					return false
 				}
 				let d = words[1].split('')
@@ -2130,7 +2154,9 @@ function compile(){
 
 				for(let j = 0; j < 4; j++){
 					if(!(d[j] in dirshorts)){
-						errorMessage = [i, 'Invalid short direction "' + d[j] + '".']
+						// errorMessage = [i, 'Invalid short direction "' + d[j] + '".']
+						errorMessage = [i, 'Invalid direction.'] 
+						// added some ambiguity so they can't use it right away
 						return false
 					}
 					c.push(dirshorts[d[j]])
@@ -2466,6 +2492,12 @@ function levelInput(key){
 					loadLevel(currentLevel, currentVersion, -2) 
 				}
 				break;
+			
+			case 0:
+				if(!isRunning){
+					extraMenuPage = 3;
+					currentScene = 3;
+				}
 		}
 	}
 	else if(!isRunning){
@@ -2589,6 +2621,10 @@ function extraMenuInput(key){
 				extraMenuCursor = 2;
 				break;
 		}
+	}
+	else if(extraMenuPage == 3){ // quick reference
+		extraMenuPage = 0;
+		currentScene = 2;
 	}
 }
 
