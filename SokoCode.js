@@ -27,21 +27,22 @@ const LEVEL_ORDER = [
 			['North?', 2],			// 2
 			['James\'s Fault', 2],	// 2
 			['Perilous Push', 3],	// 3
-			['Cornered', 4],		// 3?
+			['In A Row', 4],		// 3
+			['Cornered', 5],		// 3?
 		],
 		'win requirements' : 0
 	},
 	 {
 		'message' : '[TITLE]',
 		'levels' : [
-			['Perfect Packing', 5],	// 3
-			['Mind The Gap', 6],	// 3
-			['Double Click', 7],	// 3
-			['#403 and #405', 8],	// 3/4 ? will need to test
-			['One Sided', 9],		// 3
-			['Walled Off', 10],		// 4
-			['Second Row', 11],		// 5
-			['Clear Paperwork', 12],// 5
+			['Perfect Packing', 6],	// 3
+			['Mind The Gap', 7],	// 3
+			['Double Click', 8],	// 3
+			['#403 and #405', 9],	// 3/4 ? will need to test
+			['One Sided', 10],		// 3
+			['Walled Off', 11],		// 4
+			['Second Row', 12],		// 5
+			['Clear Paperwork', 13],// 5
 		],
 		'win requirements' : 5
 	},
