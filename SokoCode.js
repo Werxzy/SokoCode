@@ -23,35 +23,45 @@ const LEVEL_ORDER = [
 		'levels' : [
 			['Intro To Boxes', 0],	// 0
 			['That One Box', 1],	// 1
-			['Out Of Place', 1],	// 1
+			['Hallways', 1],		// 0
+			['Out Of Place', 2],	// 1
 			['North?', 2],			// 2
-			['James\'s Fault', 2],	// 2
-			['Perilous Push', 3],	// 3
-			['In A Row', 4],		// 3
-			['Cornered', 5],		// 3?
+			['James\'s Fault', 3],	// 2
+
 		],
 		'win requirements' : 0
 	},
-	 {
+	{
 		'message' : '[TITLE]',
 		'levels' : [
-			['Perfect Packing', 6],	// 3
-			['Mind The Gap', 7],	// 3
-			['Double Click', 8],	// 3
-			['#403 and #405', 9],	// 3/4 ? will need to test
-			['One Sided', 10],		// 3
-			['Walled Off', 11],		// 4
-			['Second Row', 12],		// 5
-			['Clear Paperwork', 13],// 5
+			['Perilous Push', 5],	// 3
+			['In A Row', 5],		// 3
+			['Cornered', 6],		// 3?
+			['Perfect Packing', 7],	// 3
+			['Mind The Gap', 8],	// 3
+			['One Sided', 9],		// 3
+			
 		],
 		'win requirements' : 5
+	},
+	{
+		'message' : 'Hey, James here',
+		'levels' : [
+			['Too One Sided', 10],
+			['Double Click', 10],	// 3
+			['#403 and #405', 11],	// 3/4 ?
+			['Walled Off', 12],		// 4
+			['Second Row', 13],		// 5
+			['Clear Paperwork', 14],// 5
+		],
+		'win requirements' : 10
 	},
 	{
 		'message' : 'Goodbye...',
 		'levels' : [
 
 		],
-		'win requirements' : 13
+		'win requirements' : 15
 	},
 
 ]
@@ -61,6 +71,7 @@ const MESSAGES = {
 	//originally was going to go with BOXTOPIA, but it already exists
 	'Greetings!' : ' Welcome to the team! We\'re glad you too saw potential for the box to be the end-all be-all product of the future, and begin your internship with us here at BOXTOPIC.™ Where the future is "Thinking inside the box"! And just as a reminder, the role you have signed up for is an UNPAID internship.                                                          If you have any questions, please contact the lead box technician, James.',
 	'[TITLE]' : ' We at [COMPANY-NAME] believe that [PRODUCT1] are the biggest game-changer since [PRODUCT2]! The future of [TARGET-AUDIENCE] is in your hands. We can\'t let Big [PRODUCT1] get one on us. Keep working hard to ensure [MOTIVE]. And remember, [TAGLINE].                                                                                                                                                                Automated message usingERROR CODE 0x301D8A PLEASE NOTIFY SERVER ADMINISTRATOR' ,
+	'Hey, James here' : ' You may have noticed that the quick reference notes an instruction that isn\'t explained in the manual and I think I figured it out. FRS takes four letters, each being the first letter of any dir word.           Example: "FRS NESW" or "FRS FRBL"                                    This makes the robot move in the first direction that lets it, then faces the robot in that direction. Good luck figuring out how or where to use it though.',
 	'Goodbye...' : ' Sorry, but we\'re having to let go all staff due to low profits. It turns out boxes were not the next big trend we predicted them to be. You may finish any work you have left.                                                       We wish you well in your next line of work.                                                        sincerely,                        [SENDER-NAME] '
 }
 
@@ -831,40 +842,6 @@ const ALL_LEVELS = {
 	'One Sided' : {
 		description : ' I keep forgetting which side the boxes are suppose to be stored in. Please move the boxes this while I figure this out.',
 		versions : [
-			/*  Sadly, I don't think this version is possible with the current limitations
-			{
-				grid : [
-					[1,1,0,0,0],
-					[1,1,0,0,0],
-				],
-				goals : [
-					[3,0], [4,0], 
-					[3,1], [4,1], 
-				],
-				startPos : [2,0],
-				startDir : 3
-			},
-			*/
-			// slightly different version from the one below, but I'm not sure if it's possible
-			/*
-			{
-				grid : [
-					[1,0,0,0],
-					[1,0,0,0],
-					[1,0,0,0],
-					[1,0,0,0],
-					[3,3,3,2],
-				],
-				goals : [
-					[3,0], 
-					[3,1], 
-					[3,2], 
-					[3,3],
-				],
-				startPos : [1,0],
-				startDir : 3
-			},
-			*/
 			
 			
 			{
@@ -885,6 +862,47 @@ const ALL_LEVELS = {
 				startDir : 3
 			},
 			
+		],
+		startCode : [
+			''
+		]
+	},
+
+	// To test
+	'Too One Sided' : {
+		description : ' Nope, I totally got it this time, please move the boxes back again.',
+		versions : [
+			{
+				grid : [
+					[0,0,0,1,1],
+					[0,0,0,1,1],
+				],
+				goals : [
+					[0,0], [1,0], 
+					[0,1], [1,1], 
+				],
+				startPos : [2,0],
+				startDir : 3
+			},
+			
+			/* // I prefer the one above due to it not having a solution that overlaps with 'One Sided'
+			{
+				grid : [
+					[0,0,0,1],
+					[0,0,0,1],
+					[0,0,0,1],
+					[0,0,0,1],
+					[3,3,3,2],
+				],
+				goals : [
+					[0,0], 
+					[0,1], 
+					[0,2], 
+					[0,3],
+				],
+				startPos : [2,0],
+				startDir : 3
+			},	 */
 		],
 		startCode : [
 			''
@@ -996,22 +1014,44 @@ const ALL_LEVELS = {
 			''
 		]
 	},
+
+	'Hallways' : {
+		description : ' This is a test level',
+		versions : [
+			{
+				grid : [
+					[2,2,2,2,2,2,2,2,0],
+					[2,2,2,2,2,2,2,2,1],
+					[2,2,0,0,0,0,0,2,0],
+					[0,0,0,2,2,2,0,0,0],
+					[2,2,2,2,2,2,2,2,2],
+				],
+				goals : [
+					[8,0], 
+				],
+				startPos : [0,3],
+				startDir : 0
+			},
+			{
+				grid : [
+					[2,2,2,2,2,0],
+					[2,2,2,2,2,1],
+					[2,0,0,0,2,0],
+					[2,0,2,0,2,0],
+					[0,0,2,0,0,0],
+				],
+				goals : [
+					[5,0], 
+				],
+				startPos : [0,4],
+				startDir : 0
+			},
+		],
+		startCode : [
+			''
+		]
+	},
 };
-
-/*
-	puzzle ideas
-	
-	(done) single row, teach push and pull (tutorial)
-	(done) using rotation to count (counting)
-	(kinda done) two rows of boxes (repetition)
-	(done) row of boxes that have to either be on the top or middle row
-		(this could include randomized solutions)
-
-	(done) push blocks down a hallway to fill a gap
-	(done) pull block from the left to fill unoccupied rows
-
-	counting boxes
-*/
 
 const solids = [
 	false,
@@ -1730,7 +1770,7 @@ function drawLevelSelection(){
 		for(let i = 0; i < LEVEL_ORDER.length; i++){
 			let left = LEVEL_ORDER[i]['win requirements'] - levelsDone
 			if(left > 0){
-				drawTextWrapped('Finish ' + left + ' more assignments.', 4, 1,i*2 + 1, 15);
+				drawTextWrapped('Finish ' + left + ' more assignments to continue.', 4, 1,i*2 + 1, 15);
 				break;
 			}
 			drawText(LEVEL_ORDER[i]['message'], levelCursor == i ? 17 : 8, 1,i*2 + 1)
