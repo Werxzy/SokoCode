@@ -1,6 +1,6 @@
 let tick = 0;
 
-let gameVersion = '1.1'
+let gameVersion = '1.2'
 
 let cursorX, cursorY;
 let codeText;
@@ -114,8 +114,8 @@ const ALL_LEVELS = {
 			},
 		],
 		startCode : [
-			'MOV WEST',
-			'MOV FORTH',
+			'MOV EAST',
+			'PUL BACK',
 			'',
 			'/LOOK AT MANUAL',
 			'/IN MENU FOR',
@@ -1418,7 +1418,7 @@ function createEmptyData(){
 }
 
 function loadUserData(){
-	d = loadData()
+	let d = loadData()
 	if(d.length == 0)
 		createEmptyData()
 	else
