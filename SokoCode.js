@@ -1016,7 +1016,7 @@ const ALL_LEVELS = {
 	},
 
 	'Hallways' : {
-		description : ' This is a test level',
+		description : ' Try navigating the robot around with in the hallways. It won\'t do anything if you have it move into a wall.',
 		versions : [
 			{
 				grid : [
