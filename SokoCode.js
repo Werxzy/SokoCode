@@ -1,6 +1,6 @@
 let tick = 0;
 
-let gameVersion = '1.1'
+let gameVersion = '1.2'
 
 let cursorX, cursorY;
 let codeText;
@@ -15,32 +15,55 @@ let filledHoles = []; // just for looks, shouldn't cause any puzzle interaction
 let goals = [];
 // max level size is 9 by 5 
 
-//[key, isLevel, win requirements]
 const LEVEL_ORDER = [
-	['Greetings!', false, 0],
-
 	// somewhat sorted by guessed difficulty
 
-	['Intro To Boxes', true, 0],	// 0
-	['That One Box', true, 1],		// 1
-	['Out Of Place', true, 1],		// 1
-	['North?', true, 2],			// 2
-	['James\'s Fault', true, 3],	// 2
-	['Perilous Push', true, 4],		// 3
-	['Cornered', true, 5],			// 3?
-	
-	['[TITLE]', false, 6],
-	
-	['Perfect Packing', true, 6],	// 3
-	['Mind The Gap', true, 7],		// 3
-	['Double Click', true, 8],		// 3
-	['#403 and #405', true, 9],	    // 3/4 ? will need to test
-	['One Sided', true, 10],		// 3
-	['Walled Off', true, 11],		// 4
-	['Second Row', true, 12],		// 5
-	['Clear Paperwork', true, 13],	// 5
+	{
+		'message' : 'Greetings!', 
+		'levels' : [
+			['Intro To Boxes', 0],	// 0
+			['That One Box', 1],	// 1
+			['Hallways', 1],		// 0
+			['Out Of Place', 2],	// 1
+			['North?', 2],			// 2
+			['James\'s Fault', 3],	// 2
 
-	['Goodbye...', false, 14],
+		],
+		'win requirements' : 0
+	},
+	{
+		'message' : '[TITLE]',
+		'levels' : [
+			['Perilous Push', 5],	// 3
+			['In A Row', 5],		// 3
+			['Cornered', 6],		// 3?
+			['Perfect Packing', 7],	// 3
+			['Mind The Gap', 8],	// 3
+			['One Sided', 9],		// 3
+			
+		],
+		'win requirements' : 5
+	},
+	{
+		'message' : 'Hey, James here',
+		'levels' : [
+			['Too One Sided', 10],
+			['Double Click', 10],	// 3
+			['#403 and #405', 11],	// 3/4 ?
+			['Walled Off', 12],		// 4
+			['Second Row', 13],		// 5
+			['Clear Paperwork', 14],// 5
+		],
+		'win requirements' : 10
+	},
+	{
+		'message' : 'Goodbye...',
+		'levels' : [
+
+		],
+		'win requirements' : 15
+	},
+
 ]
 
 // oops all spaces
@@ -48,6 +71,7 @@ const MESSAGES = {
 	//originally was going to go with BOXTOPIA, but it already exists
 	'Greetings!' : ' Welcome to the team! We\'re glad you too saw potential for the box to be the end-all be-all product of the future, and begin your internship with us here at BOXTOPIC.™ Where the future is "Thinking inside the box"! And just as a reminder, the role you have signed up for is an UNPAID internship.                                                          If you have any questions, please contact the lead box technician, James.',
 	'[TITLE]' : ' We at [COMPANY-NAME] believe that [PRODUCT1] are the biggest game-changer since [PRODUCT2]! The future of [TARGET-AUDIENCE] is in your hands. We can\'t let Big [PRODUCT1] get one on us. Keep working hard to ensure [MOTIVE]. And remember, [TAGLINE].                                                                                                                                                                Automated message usingERROR CODE 0x301D8A PLEASE NOTIFY SERVER ADMINISTRATOR' ,
+	'Hey, James here' : ' You may have noticed that the quick reference notes an instruction that isn\'t explained in the manual and I think I figured it out. FRS takes four letters, each being the first letter of any dir word.           Example: "FRS NESW" or "FRS FRBL"                                    This makes the robot move in the first direction that lets it, then faces the robot in that direction. Good luck figuring out how or where to use it though.',
 	'Goodbye...' : ' Sorry, but we\'re having to let go all staff due to low profits. It turns out boxes were not the next big trend we predicted them to be. You may finish any work you have left.                                                       We wish you well in your next line of work.                                                        sincerely,                        [SENDER-NAME] '
 }
 
@@ -90,8 +114,8 @@ const ALL_LEVELS = {
 			},
 		],
 		startCode : [
-			'MOV LEFT',
-			'MOV RIGHT',
+			'MOV EAST',
+			'PUL BACK',
 			'',
 			'/LOOK AT MANUAL',
 			'/IN MENU FOR',
@@ -818,40 +842,6 @@ const ALL_LEVELS = {
 	'One Sided' : {
 		description : ' I keep forgetting which side the boxes are suppose to be stored in. Please move the boxes this while I figure this out.',
 		versions : [
-			/*  Sadly, I don't think this version is possible with the current limitations
-			{
-				grid : [
-					[1,1,0,0,0],
-					[1,1,0,0,0],
-				],
-				goals : [
-					[3,0], [4,0], 
-					[3,1], [4,1], 
-				],
-				startPos : [2,0],
-				startDir : 3
-			},
-			*/
-			// slightly different version from the one below, but I'm not sure if it's possible
-			/*
-			{
-				grid : [
-					[1,0,0,0],
-					[1,0,0,0],
-					[1,0,0,0],
-					[1,0,0,0],
-					[3,3,3,2],
-				],
-				goals : [
-					[3,0], 
-					[3,1], 
-					[3,2], 
-					[3,3],
-				],
-				startPos : [1,0],
-				startDir : 3
-			},
-			*/
 			
 			
 			{
@@ -872,6 +862,47 @@ const ALL_LEVELS = {
 				startDir : 3
 			},
 			
+		],
+		startCode : [
+			''
+		]
+	},
+
+	// To test
+	'Too One Sided' : {
+		description : ' Nope, I totally got it this time, please move the boxes back again.',
+		versions : [
+			{
+				grid : [
+					[0,0,0,1,1],
+					[0,0,0,1,1],
+				],
+				goals : [
+					[0,0], [1,0], 
+					[0,1], [1,1], 
+				],
+				startPos : [2,0],
+				startDir : 3
+			},
+			
+			/* // I prefer the one above due to it not having a solution that overlaps with 'One Sided'
+			{
+				grid : [
+					[0,0,0,1],
+					[0,0,0,1],
+					[0,0,0,1],
+					[0,0,0,1],
+					[3,3,3,2],
+				],
+				goals : [
+					[0,0], 
+					[0,1], 
+					[0,2], 
+					[0,3],
+				],
+				startPos : [2,0],
+				startDir : 3
+			},	 */
 		],
 		startCode : [
 			''
@@ -983,22 +1014,44 @@ const ALL_LEVELS = {
 			''
 		]
 	},
+
+	'Hallways' : {
+		description : ' This is a test level',
+		versions : [
+			{
+				grid : [
+					[2,2,2,2,2,2,2,2,0],
+					[2,2,2,2,2,2,2,2,1],
+					[2,2,0,0,0,0,0,2,0],
+					[0,0,0,2,2,2,0,0,0],
+					[2,2,2,2,2,2,2,2,2],
+				],
+				goals : [
+					[8,0], 
+				],
+				startPos : [0,3],
+				startDir : 0
+			},
+			{
+				grid : [
+					[2,2,2,2,2,0],
+					[2,2,2,2,2,1],
+					[2,0,0,0,2,0],
+					[2,0,2,0,2,0],
+					[0,0,2,0,0,0],
+				],
+				goals : [
+					[5,0], 
+				],
+				startPos : [0,4],
+				startDir : 0
+			},
+		],
+		startCode : [
+			''
+		]
+	},
 };
-
-/*
-	puzzle ideas
-	
-	(done) single row, teach push and pull (tutorial)
-	(done) using rotation to count (counting)
-	(kinda done) two rows of boxes (repetition)
-	(done) row of boxes that have to either be on the top or middle row
-		(this could include randomized solutions)
-
-	(done) push blocks down a hallway to fill a gap
-	(done) pull block from the left to fill unoccupied rows
-
-	counting boxes
-*/
 
 const solids = [
 	false,
@@ -1056,11 +1109,13 @@ let prevBestChar;
 
 let currentScene;
 let currentLevel;
+let currentLevelGroup;
 let currentVersion;
 let testingVersion;
 let currentSolution;
 
 let levelsDone;
+let levelsDoneByGroup;
 
 let levelCursor;
 let levelSolutionCursor;
@@ -1079,8 +1134,11 @@ requested position.                              \
                                                  \
  It doesn\'t matter if the robot is in the       \
 middle of instructions, once all of the boxes    \
-are in place, the robot will automatically.      \
-shut off'
+are in place, the robot will automatically       \
+shut off.                                        \
+                                                 \
+ You can press (0) to open a quick reference     \
+guide for valid instructions.'
 ,
 ' < Scoring >                                     \
                                                  \
@@ -1095,13 +1153,16 @@ towards this amount. (Make comments using "/")   \
 the assignment.'
 ,
 ' < [dir] Words >                                 \
+                                       N         \
+NORTH - Represents that direction      ║         \
+SOUTH - relative to the view.        W═╬═E       \
+EAST  - North is always the top        ║         \
+WEST  - of the screen.                 S         \
                                                  \
-LEFT  - Represents that direction.               \
-RIGHT -                                          \
-UP    -                                          \
-DOWN  -                                          \
-                                                 \
-FORWARD - The direction the robot is facing.     '
+FORTH - Relative to the direction the            \
+BACK  - robot is facing.                         \
+LEFT  -                                          \
+RIGHT -                                          '
 ,
 ' < Movement Instructions >                       \
                                                  \
@@ -1131,6 +1192,8 @@ SET [TRUE/FALSE] - Sets the state of the robot.  '
 ' < Jump Instructions >                           \
                                                  \
 [any]:      - Creates a label.                   \
+              Can be on the same line as         \
+              an instruction.                    \
                                                  \
 JMP [label] - Jumps to label.                    \
                                                  \
@@ -1138,6 +1201,20 @@ JMT [label] - Jumps to label if state is TRUE.   \
                                                  \
 JMF [label] - Jumps to label if state is FALSE.  '
 ];
+
+const instQuickRef = 
+' < Quick Reference >                             \
+                                                 \
+[dir] Words - NORTH SOUTH EAST WEST           N  \
+              FORTH BACK RIGHT LEFT          W╬E \
+                                              S  \
+Movement - MOV PUL FCE ROT FRS                   \
+                                                 \
+Logic - CHK CHF SET                              \
+                                                 \
+Label - [any]: [0 or 1 instruction]              \
+                                                 \
+Jump - JMP JMT JMF                               '
 
 const creditsPage = 
 'Soko Code by Werxzy                              \
@@ -1341,7 +1418,7 @@ function createEmptyData(){
 }
 
 function loadUserData(){
-	d = loadData()
+	let d = loadData()
 	if(d.length == 0)
 		createEmptyData()
 	else
@@ -1380,6 +1457,7 @@ function onConnect()
 
 	currentScene = 0;
 	currentLevel = 0;
+	currentLevelGroup = 0;
 	currentVersion = 0;
 	testingVersion = 0;
 	currentSolution = 0;
@@ -1392,7 +1470,7 @@ function onConnect()
 	extraMenuCursor = 0;
 	extraMenuPage = 0;
 
-	levelsDone = calculateLevelsDone()
+	calculateLevelsDone()
 }
 
 // - - - - Drawing Functions - - - -
@@ -1602,17 +1680,20 @@ function drawTitleScreen(){
 }
 
 function drawLevelInfo(){
-	option = LEVEL_ORDER[levelCursor]
-	levelName = option[0]
-	nameX = Math.floor(36.5 - levelName.length / 2)
+	
+	if(levelSelectStage > 0){
+		if(LEVEL_ORDER[currentLevelGroup]['levels'].length == 0)
+			return;
 
-	drawText(levelName, 13, nameX, 1)
-	drawBox(6, nameX-1, 0, levelName.length+2, 3)
-	drawBox(6, 19, 2, 35, 16)
-	drawText('╩', 6, nameX-1, 2)
-	drawText('╩', 6, nameX+levelName.length, 2)
-
-	if(option[1]){
+		option = LEVEL_ORDER[currentLevelGroup]['levels'][levelCursor]
+		levelName = option[0]
+		nameX = Math.floor(36.5 - levelName.length / 2)
+	
+		drawText(levelName, 13, nameX, 1)
+		drawBox(6, nameX-1, 0, levelName.length+2, 3)
+		drawBox(6, 19, 2, 35, 16)
+		drawText('╩', 6, nameX-1, 2)
+		drawText('╩', 6, nameX+levelName.length, 2)
 		
 		drawTextWrapped(ALL_LEVELS[levelName].description,11,20,3, 33)
 
@@ -1647,7 +1728,7 @@ function drawLevelInfo(){
 		sol = userSave[levelName].solutions
 		for(let i = 0; i < sol.length; i++){
 			// TODO? add solution naming?
-			drawText('Solution ' + (i+1), (levelSelectStage == 1 && levelSolutionCursor == i) ? 17 : 13, 20, 12 + i)
+			drawText('Solution ' + (i+1), (levelSelectStage == 2 && levelSolutionCursor == i) ? 17 : 13, 20, 12 + i)
 			color = sol[i].time == 999 ? 6 : 13
 			t = String(sol[i].time)
 			drawText(t, color, 48 - t.length, 12 + i)
@@ -1656,9 +1737,9 @@ function drawLevelInfo(){
 		}
 
 		if(sol.length < 5)
-			drawText('+ New Solution + ', (levelSelectStage == 1 && levelSolutionCursor == sol.length) ? 17 : 13, 20, 12 + sol.length)
+			drawText('+ New Solution + ', (levelSelectStage == 2 && levelSolutionCursor == sol.length) ? 17 : 13, 20, 12 + sol.length)
 		
-		if(levelSelectStage == 1){
+		if(levelSelectStage == 2){
 			drawText('>', 17, 19, 12 + levelSolutionCursor)
 			if(levelDeleteKey > 0){
 				userSave[currentLevel].solutions
@@ -1669,27 +1750,53 @@ function drawLevelInfo(){
 		}
 	}
 	else{
-		drawTextWrapped(MESSAGES[levelName],11,20,3, 33)
+		levelName = LEVEL_ORDER[levelCursor]['message']
+		nameX = Math.floor(36.5 - levelName.length / 2)
+	
+		drawText(levelName, 13, nameX, 1)
+		drawBox(6, nameX-1, 0, levelName.length+2, 3)
+		drawBox(6, 19, 2, 35, 16)
+		drawText('╩', 6, nameX-1, 2)
+		drawText('╩', 6, nameX+levelName.length, 2)
+
+		drawTextWrapped(MESSAGES[LEVEL_ORDER[levelCursor]['message']],11,20,3, 33)
 	}
 }
 
 function drawLevelSelection(){
 	drawMainBoxes()
-	for(let i = 0; i < LEVEL_ORDER.length; i++){
-		if(LEVEL_ORDER[i][2] > levelsDone) break;
-		drawText(LEVEL_ORDER[i][0], levelCursor == i ? 17 : 8, 1,i+1)
+
+	if(levelSelectStage == 0){
+		for(let i = 0; i < LEVEL_ORDER.length; i++){
+			let left = LEVEL_ORDER[i]['win requirements'] - levelsDone
+			if(left > 0){
+				drawTextWrapped('Finish ' + left + ' more assignments to continue.', 4, 1,i*2 + 1, 15);
+				break;
+			}
+			drawText(LEVEL_ORDER[i]['message'], levelCursor == i ? 17 : 8, 1,i*2 + 1)
+			if(LEVEL_ORDER[i]['levels'].length > 0){
+				let doneString = '- Done ' + levelsDoneByGroup[i] + '/' + LEVEL_ORDER[i]['levels'].length
+				drawText(doneString, 7, 15 - doneString.length,i*2 + 2)
+			}
+		}
+		drawText('>', 17, 0, levelCursor * 2 + 1)
 	}
-	if(levelSelectStage == 0)
+
+	if(levelSelectStage > 0){
+		for(let i = 0; i < LEVEL_ORDER[currentLevelGroup]['levels'].length; i++){
+			let lev = LEVEL_ORDER[currentLevelGroup]['levels'][i];
+			if(lev[1] > levelsDone) break;
+			drawText(lev[0], levelCursor == i ? 17 : 8, 1,i+1)
+		}
+	}
+	if(levelSelectStage == 1)
 		drawText('>', 17, 0, levelCursor + 1)
 		
 	drawLevelInfo();
 	
-	if(LEVEL_ORDER[levelCursor][1])
-		drawText("(Enter) Select              (ESC) Back", 10, 17, 19);
-	else
-		drawText("                            (ESC) Back", 10, 17, 19);
+	drawText("(Enter) Select              (ESC) Back", 10, 17, 19);
 
-	if(levelSelectStage == 1 && levelSolutionCursor < userSave[currentLevel].solutions.length)
+	if(levelSelectStage == 2 && levelSolutionCursor < userSave[currentLevel].solutions.length)
 		drawText('(DDD) Delete', 10, 32, 19)
 }
 
@@ -1762,7 +1869,7 @@ function drawLevelScreen(){
 			if(ALL_LEVELS[currentLevel].versions.length > 1)
 				drawText('(1) Run (2) Step (3) Cycle  (ESC) Menu', 10, 17, 19);
 			else
-				drawText('(1) Run (2) Step            (ESC) Menu', 10, 17, 19);
+				drawText('(1) Run (2) Step (0) Ref.   (ESC) Menu', 10, 17, 19);
 		}		
 	}
 	
@@ -1789,7 +1896,13 @@ function drawLevelExtraMenu(){
 		drawTextWrapped(creditsPage, 10, 4, 4, 48)
 	}
 	
-	drawText('(ESC) Back', 10, 45, 19)
+	if(extraMenuPage == 3){ // quick reference
+		drawTextWrapped(instQuickRef, 10, 4, 4, 48)
+		drawText('(any) Back', 10, 45, 19)
+	}
+	else{
+		drawText('(ESC) Back', 10, 45, 19)
+	}
 }
 
 function drawWinScreen(){
@@ -1822,8 +1935,8 @@ function drawWinScreen(){
 // - - - - Puzzle Functions - - - -
 
 function getDir(dir){
-	if(dir == 4)
-		return getDir(robotDir)
+	if(dir >= 4)
+		return getDir((robotDir + dir) % 4)
 	return [[1,0],[0,-1],[-1,0],[0,1]][dir]
 }
 
@@ -1838,6 +1951,13 @@ function opposite(dir){
 
 function insideLevel(x, y){
 	return x >= 0 && y >= 0 && x < level[0].length && y < level.length;
+}
+
+function setFacing(dir){
+	if(dir >= 4)
+		robotDir = (robotDir + dir) % 4;
+	else
+		robotDir = dir;
 }
 
 function move(dir){
@@ -1950,13 +2070,18 @@ function loadLevel(levelName, version, solutionNumber){
 }
 
 function calculateLevelsDone(){
-	count = 0;
+	levelsDoneByGroup = []
+	let count = 0
 	for(let i = 0; i < LEVEL_ORDER.length; i++){
-		if(LEVEL_ORDER[i][1] && userSave[LEVEL_ORDER[i][0]].bestTime != 999){
-			count += 1;
+		levelsDoneByGroup.push(0)
+		for(let j = 0; j < LEVEL_ORDER[i]['levels'].length; j++){
+			if(userSave[LEVEL_ORDER[i]['levels'][j][0]].bestTime != 999){
+				count += 1;
+				levelsDoneByGroup[i] += 1
+			}
 		}
 	}
-	return count;
+	levelsDone = count
 }
 
 // - - - - ~Programming~ functions - - - -
@@ -1974,16 +2099,33 @@ const keywords ={
 	'MOV': [6, 'dir'],
 	'PUL': [7, 'dir'],
 	'FCE': [8, 'dir'],
-	'ROT': [9, 'r/l']
+	'ROT': [9, 'r/l'],
+	'FRS': [10, '4dirshorts']
 }
 // WARNING these may change in order
 
 const dirwords = {
-	'RIGHT': 0,
-	'UP': 1,
-	'LEFT': 2,
-	'DOWN': 3,
-	'FORWARD': 4
+	'EAST'  : 0,
+	'NORTH' : 1,
+	'WEST'  : 2,
+	'SOUTH' : 3,
+
+	'FORTH' : 4,
+	'LEFT'  : 5,
+	'BACK'  : 6,
+	'RIGHT' : 7
+}
+
+const dirshorts = {
+	'E'  : 0,
+	'N' : 1,
+	'W'  : 2,
+	'S' : 3,
+
+	'F' : 4,
+	'L'  : 5,
+	'B'  : 6,
+	'R' : 7
 }
 
 function compile(){
@@ -2044,9 +2186,11 @@ function compile(){
 		}
 
 		if(words[0] in keywords){
-			if(keywords[words[0]][1] == 'dir'){
+			let w = keywords[words[0]][1]
+
+			if(w == 'dir'){
 				if(words[1] in dirwords){
-					compiledCode.push([ keywords[words[0]][0], dirwords[words[1]], i])
+					compiledCode.push([ keywords[words[0]][0], dirwords[words[1]]])
 				}
 				else{
 					// ERROR, invalid direction
@@ -2054,9 +2198,10 @@ function compile(){
 					return false
 				}
 			}
-			else if(keywords[words[0]][1] == 'label'){
+
+			else if(w == 'label'){
 				if(words[1] in labels){
-					compiledCode.push([ keywords[words[0]][0], labels[words[1]], i])
+					compiledCode.push([ keywords[words[0]][0], labels[words[1]]])
 				}
 				else{
 					// ERROR, invalid label
@@ -2065,9 +2210,9 @@ function compile(){
 				}
 			}
 
-			else if(keywords[words[0]][1] == 'bool'){
+			else if(w == 'bool'){
 				if(words[1] == 'TRUE' || words[1] == 'FALSE'){
-					compiledCode.push([ keywords[words[0]][0], words[1] == 'TRUE', i])
+					compiledCode.push([ keywords[words[0]][0], words[1] == 'TRUE'])
 				}
 				else{
 					// ERROR, invalid direction
@@ -2076,15 +2221,38 @@ function compile(){
 				}
 			}
 
-			else if(keywords[words[0]][1] == 'r/l'){
+			else if(w == 'r/l'){
 				if(words[1] == 'RIGHT' || words[1] == 'LEFT'){
-					compiledCode.push([ keywords[words[0]][0], words[1] == 'RIGHT', i])
+					compiledCode.push([ keywords[words[0]][0], words[1] == 'RIGHT'])
 				}
 				else{
 					// ERROR, invalid direction
 					errorMessage = [i, 'Invalid direction, use LEFT/RIGHT.']
 					return false
 				}
+			}
+
+			else if(w == '4dirshorts'){
+				if(words.length == 1 || words[1].length != 4){
+					// ERROR, invalid direction
+					// errorMessage = [i, 'Invalid number of characters.']
+					errorMessage = [i, 'Invalid direction.']
+					return false
+				}
+				let d = words[1].split('')
+				let c = [ keywords[words[0]][0] ];
+
+				for(let j = 0; j < 4; j++){
+					if(!(d[j] in dirshorts)){
+						// errorMessage = [i, 'Invalid short direction "' + d[j] + '".']
+						errorMessage = [i, 'Invalid direction.'] 
+						// added some ambiguity so they can't use it right away
+						return false
+					}
+					c.push(dirshorts[d[j]])
+				}
+
+				compiledCode.push(c)
 			}
 		}
 		else{
@@ -2159,14 +2327,21 @@ function codeStep(){
 			break;
 
 		case 8: // FCE
-			d = compiledCode[executingLine++][1]
-			if (d >= 0 && d < 4)
-				robotDir = d;
+			setFacing(compiledCode[executingLine++][1])
 			break;
 
 		case 9: // ROT
 			rotateRobot(compiledCode[executingLine++][1]);
 			break;
+
+		case 10: // FRS
+			for(let i = 1; i < 5; i++){
+				if (move(compiledCode[executingLine][i])){
+					setFacing(compiledCode[executingLine][i])
+					break;
+				}
+			}
+			executingLine += 1;
 	}
 
 	
@@ -2407,6 +2582,12 @@ function levelInput(key){
 					loadLevel(currentLevel, currentVersion, -2) 
 				}
 				break;
+			
+			case 0:
+				if(!isRunning){
+					extraMenuPage = 3;
+					currentScene = 3;
+				}
 		}
 	}
 	else if(!isRunning){
@@ -2415,31 +2596,51 @@ function levelInput(key){
 }
 
 function levelSelectInput(key){
-	if(levelSelectStage == 0){ // selecting a level
+	if(levelSelectStage == 0){ // selecting level group
 		switch(key){
 			case 17: // up arrow
 				levelCursor = Math.max(0, levelCursor - 1);
 				break;
 			case 18: // down arrow
-				if(levelCursor + 1 < LEVEL_ORDER.length && LEVEL_ORDER[levelCursor + 1][2] <= levelsDone){
+				if(levelCursor + 1 < LEVEL_ORDER.length && LEVEL_ORDER[levelCursor + 1]['win requirements'] <= levelsDone){
 					levelCursor += 1
 				}
 				break;
 			case 10: // enter key
-				currentLevel = Object.keys(ALL_LEVELS)[levelCursor];
-				if(LEVEL_ORDER[levelCursor][1]){ // don't open messages as levels
-					currentLevel = LEVEL_ORDER[levelCursor][0];
+				if(LEVEL_ORDER[levelCursor]['levels'].length > 0){
+					currentLevelGroup = levelCursor;
+					levelCursor = 0;
 					levelSelectStage = 1;
-					levelSolutionCursor = 0;
 				}
 				break;
 			case 27: // escape
 				currentScene = 0;
 				break;
 		}
+	}
+	else if(levelSelectStage == 1){ // selecting a level
+		switch(key){
+			case 17: // up arrow
+				levelCursor = Math.max(0, levelCursor - 1);
+				break;
+			case 18: // down arrow
+				if(levelCursor + 1 < LEVEL_ORDER[currentLevelGroup]['levels'].length && LEVEL_ORDER[currentLevelGroup]['levels'][levelCursor + 1][1] <= levelsDone){
+					levelCursor += 1
+				}
+				break;
+			case 10: // enter key
+				currentLevel = LEVEL_ORDER[currentLevelGroup]['levels'][levelCursor][0];
+				levelSelectStage = 2;
+				levelSolutionCursor = 0;
+				break;
+			case 27: // escape
+				levelCursor = currentLevelGroup;
+				levelSelectStage = 0
+				break;
+		}
 		levelDeleteKey = 0
 	}
-	else if(levelSelectStage == 1){ // selecting a solution
+	else if(levelSelectStage == 2){ // selecting a solution
 		if(key == 100 || key == 68){
 			if(levelSolutionCursor < userSave[currentLevel].solutions.length 
 					&& ++levelDeleteKey >= 3){
@@ -2471,7 +2672,7 @@ function levelSelectInput(key){
 				cursorX = cursorY = 0;
 				break;
 			case 27: // escape
-				levelSelectStage = 0;
+				levelSelectStage = 1;
 				break;
 		}
 	}
@@ -2501,7 +2702,7 @@ function extraMenuInput(key){
 					saveUserData()
 					currentScene = 1
 					extraMenuCursor = 0
-					levelsDone = calculateLevelsDone()
+					calculateLevelsDone()
 				}
 				break;
 			case 27: // escape
@@ -2531,6 +2732,10 @@ function extraMenuInput(key){
 				break;
 		}
 	}
+	else if(extraMenuPage == 3){ // quick reference
+		extraMenuPage = 0;
+		currentScene = 2;
+	}
 }
 
 function winScreenInput(key){
@@ -2538,7 +2743,7 @@ function winScreenInput(key){
 		switch(key){
 			case 27: // escape
 				currentScene = 1;
-				levelsDone = calculateLevelsDone();
+				calculateLevelsDone();
 				break;
 		}
 	}
