@@ -1407,6 +1407,7 @@ let userSave;
 		FORWARD
 */
 
+// - - - - Value Setup Functions - - - -
 
 function getName(){
 	return 'Soko Code';
@@ -1809,7 +1810,6 @@ function drawLevelSelection(){
 		drawText('(DDD) Delete', 10, 32, 19);
 }
 
-
 function drawLevelScreen(){
 	if(isRunning && autoRun && currentScene == 2){
 		if(autoRunDelay++ >= testingSpeed){
@@ -1937,6 +1937,25 @@ function drawWinScreen(){
 	}
 
 	drawText('(ESC) Exit', 10, 45, 19);
+}
+
+function onUpdate(){
+	// It is safe to completely redraw the screen during every update:
+	clearScreen();
+
+	switch(currentScene){
+		case 0: drawTitleScreen(); break;
+		case 1: drawLevelSelection(); break;
+		case 2: drawLevelScreen(); break;
+		case 3: 
+			drawLevelScreen(); 
+			drawLevelExtraMenu();
+			break;
+		case 4: 
+			drawLevelScreen(); 
+			drawWinScreen();
+			break;
+	}
 }
 
 // - - - - Puzzle Functions - - - -
@@ -2091,9 +2110,6 @@ function calculateLevelsDone(){
 }
 
 // - - - - ~Programming~ functions - - - -
-
-
-
 
 const keywords ={
 	'CHK': [0, 'dir'],
@@ -2272,7 +2288,6 @@ function compile(){
 	return true;
 }
 
-
 function codeStep(){
 	if(!isCompiled) return;
 	if(checkIfSolved()) return;
@@ -2417,27 +2432,6 @@ function getCodeCharCount(){
 	return count;
 }
 
-// - - - - - - - - - - - - - - - -
-
-function onUpdate(){
-	// It is safe to completely redraw the screen during every update:
-	clearScreen();
-
-	switch(currentScene){
-		case 0: drawTitleScreen(); break;
-		case 1: drawLevelSelection(); break;
-		case 2: drawLevelScreen(); break;
-		case 3: 
-			drawLevelScreen(); 
-			drawLevelExtraMenu();
-			break;
-		case 4: 
-			drawLevelScreen(); 
-			drawWinScreen();
-			break;
-	}
-}
-
 function clamp(a, b, c){ // Math.clamp doesn't exist for some reason?
 	return Math.min(Math.max(a,b),c);
 }
@@ -2555,6 +2549,8 @@ function startRun(){
 	}
 }
 
+// - - - - Input functions - - - -
+
 function levelInput(key){
 	if(key == 9){ // tab key
 		startRun();
@@ -2573,7 +2569,7 @@ function levelInput(key){
 				}
 				startRun();
 				if(isCompiled){
-					if(!autoRun);
+					if(!autoRun)
 						autoRunDelay = 0;
 					autoRun = true;
 					runUntilLine = -1;
