@@ -1096,13 +1096,14 @@ let isCompiled;
 let errorMessage;
 let executingLine; // line that's next to be executed
 let lastExecutedLine;
+let runUntilLine;
 let isRunning;
 let autoRun;
 let autoRunDelay;
 let levelTime;
 let testingSpeed;
 const baseTestingSpeed = 15;
-const fastestTestingSpeed = 4;
+const fastestTestingSpeed = 3;
 
 let levelScore;
 let prevBestChar;
@@ -1135,10 +1136,20 @@ requested position.                              \
  It doesn\'t matter if the robot is in the       \
 middle of instructions, once all of the boxes    \
 are in place, the robot will automatically       \
-shut off.                                        \
+shut off.'
+,
+' < Key Inputs >                                  \
                                                  \
- You can press (0) to open a quick reference     \
-guide for valid instructions.'
+(1) - Runs or speeds up the code.                \
+(2) - Steps through one instruction.             \
+(3) - Stops running the code and resets the      \
+      robot\'s position.                         \
+                                                 \
+(0) - Opens a quick reference guide for          \
+      valid instructions.                        \
+                                                 \
+(tab) - Runs the code until it reaches the       \
+        cursor\'s position.'
 ,
 ' < Scoring >                                     \
                                                  \
@@ -1212,7 +1223,7 @@ Movement - MOV PUL FCE ROT FRS                   \
                                                  \
 Logic - CHK CHF SET                              \
                                                  \
-Label - [any]: [0 or 1 instruction]              \
+Label - [any]: [optional instruction]            \
                                                  \
 Jump - JMP JMT JMF                               '
 
@@ -1448,6 +1459,7 @@ function onConnect()
 	executingLine = -1;
 	errorMessage = []
 	lastExecutedLine = 0;
+	runUntilLine = -1;
 	isCompiled = false;
 	isRunning = false;
 	autoRun = false;
@@ -2271,8 +2283,15 @@ function codeStep(){
 	if(!isCompiled) return;
 	if(checkIfSolved()) return;
 	if(robotTrapped) return
-	while(executingLine < compiledCode.length && compiledCode[executingLine].length == 0)
+
+	while(executingLine < compiledCode.length && compiledCode[executingLine].length == 0){
+		if(runUntilLine == executingLine){
+			autoRun = false;
+			runUntilLine = -1;
+		}
 		executingLine++;
+	}
+		
 	
 	if(executingLine >= compiledCode.length) {
 		robotHalted = true
@@ -2281,6 +2300,11 @@ function codeStep(){
 
 	levelTime++;
 	lastExecutedLine = executingLine;
+	
+	if(runUntilLine == executingLine){
+		autoRun = false;
+		runUntilLine = -1;
+	}
 
 	switch(compiledCode[executingLine][0]){
 		case 0: // CHK
@@ -2343,7 +2367,6 @@ function codeStep(){
 			}
 			executingLine += 1;
 	}
-
 	
 }
 
@@ -2544,17 +2567,27 @@ function startRun(){
 }
 
 function levelInput(key){
-	if(key >= 48 && key < 58){ // keys 0 to 9
+	if(key == 9){ // tab key
+		startRun()
+		if(isCompiled){
+			if(!autoRun)
+				autoRunDelay = 0;
+			autoRun = true;
+			runUntilLine = cursorY
+		}
+	}
+	else if(key >= 48 && key < 58){ // keys 0 to 9
 		switch(key - 48){
 			case 1: // run
-				if(isRunning){
-					testingSpeed = Math.max(testingSpeed - 2, fastestTestingSpeed);
+				if(isRunning && autoRun){
+					testingSpeed = Math.max(testingSpeed - 3, fastestTestingSpeed);
 				}
 				startRun()
 				if(isCompiled){
 					if(!autoRun)
 						autoRunDelay = 0;
 					autoRun = true;
+					runUntilLine = -1;
 				}
 				break;
 
@@ -2565,6 +2598,7 @@ function levelInput(key){
 					autoRun = false
 					autoRunDelay = 0
 					codeStep()
+					runUntilLine = -1
 				}
 				break;
 				
@@ -2575,6 +2609,7 @@ function levelInput(key){
 					autoRun = false
 					currentVersion = testingVersion
 					loadLevel(currentLevel, currentVersion, -2) 
+					runUntilLine = -1
 				}
 				else{
 					currentVersion += 1
