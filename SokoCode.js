@@ -1,3 +1,9 @@
+/**
+ * @file Soko Code (for Last Call BBS)
+ * @version 1.3
+ *
+ */
+
 let tick = 0;
 
 let gameVersion = '1.2';
@@ -1429,15 +1435,29 @@ function createEmptyData(){
 }
 
 function loadUserData(){
-	let d = loadData();
-	if(d.length == 0)
-		createEmptyData();
-	else
-		userSave = JSON.parse(d);
+	if (typeof _bbs_save !== 'undefined'){
+		if (!_bbs_load()){
+			createEmptyData();
+		}
+		usersave = _bbs_load_type('sokocode', [], 'data');
+	}
+	else{
+		let d = loadData();
+		if(d.length == 0)
+			createEmptyData();
+		else
+			userSave = JSON.parse(d);
+	}
 }
 
 function saveUserData(){
-	saveData(JSON.stringify(userSave));
+	if (typeof _bbs_load !== 'undefined'){
+		_bbs_save_type('sokocode', 'data', userSave);
+		_bbs_save();
+	}
+	else{
+		saveData(JSON.stringify(userSave));
+	}
 }
 
 function onConnect(){
