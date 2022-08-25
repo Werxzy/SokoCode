@@ -6,7 +6,7 @@
 
 let tick = 0;
 
-let gameVersion = '1.2';
+let gameVersion = '1.3';
 
 let cursorX, cursorY;
 let codeText;
@@ -1436,10 +1436,10 @@ function createEmptyData(){
 
 function loadUserData(){
 	if (typeof _bbs_save !== 'undefined'){
-		if (!_bbs_load()){
+		if (!_bbs_load())
 			createEmptyData();
-		}
-		usersave = _bbs_load_type('sokocode', [], 'data');
+		else
+			userSave = _bbs_load_type('sokocode', {}, 'data');
 	}
 	else{
 		let d = loadData();
