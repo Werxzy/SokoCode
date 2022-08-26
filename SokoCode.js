@@ -1,12 +1,12 @@
 /**
  * @file Soko Code (for Last Call BBS)
- * @version 1.3
+ * @version 1.3.1
  *
  */
 
 let tick = 0;
 
-let gameVersion = '1.3';
+let gameVersion = '1.3.1';
 
 let cursorX, cursorY;
 let codeText;
@@ -32,8 +32,7 @@ const LEVEL_ORDER = [
 			['Hallways', 1],		// 0
 			['Out Of Place', 2],	// 1
 			['North?', 2],			// 2
-			['James\'s Fault', 3],	// 2
-
+			['James\'s Fault', 3]	// 2
 		],
 		'win requirements' : 0
 	},
@@ -45,8 +44,7 @@ const LEVEL_ORDER = [
 			['Cornered', 6],		// 3?
 			['Perfect Packing', 7],	// 3
 			['Mind The Gap', 8],	// 3
-			['One Sided', 9],		// 3
-			
+			['One Sided', 9]		// 3
 		],
 		'win requirements' : 5
 	},
@@ -58,7 +56,7 @@ const LEVEL_ORDER = [
 			['#403 and #405', 11],	// 3/4 ?
 			['Walled Off', 12],		// 4
 			['Second Row', 13],		// 5
-			['Clear Paperwork', 14],// 5
+			['Clear Paperwork', 14]	// 5
 		],
 		'win requirements' : 10
 	},
@@ -2119,7 +2117,8 @@ function calculateLevelsDone(){
 	for(let i = 0; i < LEVEL_ORDER.length; i++){
 		levelsDoneByGroup.push(0);
 		for(let j = 0; j < LEVEL_ORDER[i]['levels'].length; j++){
-			if(userSave[LEVEL_ORDER[i]['levels'][j][0]].bestTime != 999){
+			let ldata = LEVEL_ORDER[i]['levels'][j];
+			if(ldata.length > 0 && userSave[ldata[0]].bestTime != 999){
 				count += 1;
 				levelsDoneByGroup[i] += 1;
 			}
